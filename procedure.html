@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Technical Procedure Repair — Procedure Text Fase F</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b14; --panel:rgba(10,18,32,.72); --line:#1d3557; --line2:#24466b;
+  --cy:#00e5ff; --mg:#ff3df2; --gr:#39ff88; --am:#ffb020; --rd:#ff4d5e; --vio:#b18cff;
+  --txt:#cfe6f5; --dim:#6f8bab;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Share Tech Mono',monospace;background:var(--bg);color:var(--txt);min-height:100dvh;overflow-x:hidden;
+  background-image:
+    radial-gradient(600px 300px at 12% -5%,rgba(0,229,255,.10),transparent 60%),
+    radial-gradient(700px 340px at 95% 105%,rgba(255,61,242,.09),transparent 60%),
+    repeating-linear-gradient(0deg,rgba(0,229,255,.035) 0 1px,transparent 1px 34px),
+    repeating-linear-gradient(90deg,rgba(0,229,255,.035) 0 1px,transparent 1px 34px);
+}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+.orb{position:fixed;border-radius:50%;filter:blur(70px);opacity:.16;pointer-events:none;z-index:0;animation:orbF 11s ease-in-out infinite alternate}
+.o1{width:320px;height:320px;background:var(--cy);top:-90px;left:-70px}
+.o2{width:300px;height:300px;background:var(--mg);bottom:-110px;right:-60px;animation-delay:-5s}
+@keyframes orbF{from{transform:translateY(-14px)}to{transform:translateY(20px)}}
+.orbit{font-family:'Orbitron',sans-serif}
+
+/* ---------- HEADER ---------- */
+header{position:relative;z-index:2;max-width:1160px;margin:0 auto;padding:14px 16px 10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{line-height:1}
+.logo h1{font-family:'Orbitron';font-weight:800;font-size:clamp(17px,2.6vw,24px);letter-spacing:2px;color:#fff;
+  text-shadow:0 0 16px rgba(0,229,255,.55)}
+.logo h1 span{color:var(--cy)}
+.logo small{font-size:11px;letter-spacing:3px;color:var(--dim)}
+.leds{display:flex;gap:6px;margin-left:6px}
+.leds i{width:9px;height:9px;border-radius:50%;animation:blink 1.6s infinite}
+.leds i:nth-child(1){background:var(--cy)}
+.leds i:nth-child(2){background:var(--am);animation-delay:.4s}
+.leds i:nth-child(3){background:var(--mg);animation-delay:.8s}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.hud{margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px 12px;text-align:center;min-width:86px}
+.chip b{font-family:'Orbitron';font-size:15px;display:block;color:var(--cy)}
+.chip.gold b{color:var(--am)}
+.chip span{font-size:9.5px;letter-spacing:2px;color:var(--dim)}
+.iconBtn{background:var(--panel);border:1px solid var(--line2);color:var(--txt);border-radius:8px;padding:9px 12px;
+  font-family:inherit;font-size:13px;cursor:pointer;transition:all .15s}
+.iconBtn:hover{border-color:var(--cy);color:var(--cy);box-shadow:0 0 12px rgba(0,229,255,.3)}
+
+/* ---------- LAYOUT ---------- */
+#wrap{position:relative;z-index:2;max-width:1160px;margin:0 auto;padding:6px 16px 26px;display:grid;
+  grid-template-columns:1.15fr .85fr;gap:16px}
+@media(max-width:920px){#wrap{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;backdrop-filter:blur(3px)}
+.ptitle{font-family:'Orbitron';font-size:11px;letter-spacing:3px;color:var(--dim);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ptitle::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line2),transparent)}
+
+/* brief */
+#caseCode{color:var(--mg);letter-spacing:2px;font-size:11px}
+#caseTitle{font-family:'Orbitron';font-weight:800;font-size:clamp(16px,2.4vw,21px);color:#fff;margin:3px 0 6px}
+#caseBrief{font-size:14px;color:#a8c4da;line-height:1.5}
+.lampRow{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;letter-spacing:1px;color:var(--dim)}
+.lamp{width:12px;height:12px;border-radius:50%;background:var(--rd);box-shadow:0 0 10px var(--rd);animation:blink 1.2s infinite}
+.lamp.online{background:var(--gr);box-shadow:0 0 12px var(--gr)}
+
+/* ---------- FLOWCHART ---------- */
+.flow{display:flex;flex-direction:column;align-items:stretch;padding-top:4px}
+.fnode{align-self:center;font-size:11.5px;letter-spacing:2px;padding:5px 14px;border-radius:99px;border:1px solid var(--am);
+  color:var(--am);background:rgba(255,176,32,.07);text-shadow:0 0 8px rgba(255,176,32,.4)}
+.wire{width:4px;height:26px;margin:0 auto;border-radius:2px;
+  background:repeating-linear-gradient(180deg,var(--line2) 0 6px,transparent 6px 12px)}
+.wire.live{background:repeating-linear-gradient(180deg,var(--cy) 0 6px,transparent 6px 12px);
+  box-shadow:0 0 10px rgba(0,229,255,.7);animation:flowD .35s linear infinite}
+@keyframes flowD{from{background-position:0 0}to{background-position:0 12px}}
+.slot{position:relative;border:2px dashed var(--line2);border-radius:10px;padding:9px 12px 10px;background:rgba(8,15,28,.6);
+  transition:border-color .2s,box-shadow .2s,background .2s}
+.slot .lbl{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:10.5px;letter-spacing:2px;color:var(--dim)}
+.adv{font-family:'Orbitron';font-size:9px;letter-spacing:1.5px;padding:2.5px 9px;border-radius:99px;border:1px solid;color:#041018}
+.a0{background:var(--cy);border-color:var(--cy)} .a1{background:var(--gr);border-color:var(--gr)}
+.a2{background:var(--am);border-color:var(--am)} .a3{background:var(--mg);border-color:var(--mg)}
+.a4{background:var(--vio);border-color:var(--vio)}
+.slot .drop{min-height:40px;display:flex;align-items:center;font-size:12px;color:#3d5a78;letter-spacing:1px}
+.slot.over{border-color:var(--cy);background:rgba(0,229,255,.07);box-shadow:0 0 16px rgba(0,229,255,.25) inset}
+.slot.ok{border-style:solid;border-color:var(--gr);background:rgba(57,255,136,.06);box-shadow:0 0 14px rgba(57,255,136,.2)}
+.slot.err{border-style:solid;border-color:var(--rd);background:rgba(255,77,94,.08);animation:shake .5s}
+.slot.exec{border-color:var(--am);box-shadow:0 0 16px rgba(255,176,32,.35)}
+.slot .tick{position:absolute;top:9px;right:11px;font-size:14px;display:none}
+.slot.ok .tick{display:block;color:var(--gr)}
+.slot.err .tick{display:block;color:var(--rd)}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.core{align-self:center;margin-top:4px;width:130px;height:74px;border:2px solid var(--line2);border-radius:14px;position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:rgba(8,15,28,.8);transition:all .4s}
+.core b{font-family:'Orbitron';font-size:10px;letter-spacing:2px;color:var(--dim)}
+.core span{font-family:'Orbitron';font-size:13px;letter-spacing:2px;color:var(--rd)}
+.core.testing{border-color:var(--am)} .core.testing span{color:var(--am)}
+.core.online{border-color:var(--gr);box-shadow:0 0 26px rgba(57,255,136,.5),0 0 60px rgba(57,255,136,.2)}
+.core.online span{color:var(--gr);text-shadow:0 0 10px var(--gr)}
+.core.online::after{content:"";position:absolute;inset:-8px;border:2px solid var(--gr);border-radius:18px;opacity:0;animation:ring 1.4s ease-out infinite}
+@keyframes ring{from{opacity:.8;transform:scale(.9)}to{opacity:0;transform:scale(1.25)}}
+
+/* ---------- BANK & BLOCKS ---------- */
+#bank{display:flex;flex-direction:column;gap:9px;min-height:120px}
+#bank.over{outline:2px dashed var(--cy);outline-offset:4px;border-radius:10px}
+.block{position:relative;background:linear-gradient(180deg,#13233c,#0c1727);border:1px solid var(--line2);border-left:4px solid var(--cy);
+  border-radius:8px;padding:10px 12px;font-size:13.5px;line-height:1.45;cursor:grab;transition:transform .14s,box-shadow .14s,border-color .2s}
+.block::before{content:"▣";position:absolute;right:10px;top:9px;color:#33587c;font-size:12px}
+.block:hover{transform:translateY(-2px);border-color:var(--cy);box-shadow:0 6px 16px rgba(0,0,0,.5),0 0 12px rgba(0,229,255,.25)}
+.block.dragging{opacity:.45}
+.block.locked{cursor:default;border-left-color:var(--gr);opacity:.92}
+.block.locked:hover{transform:none;box-shadow:none}
+.block .advW{color:var(--cy);font-weight:bold}
+.block .verb{color:var(--mg)}
+.slot .block{cursor:grab}
+.slot.ok .block{cursor:default}
+
+/* ---------- TEST RUN & CONSOLE ---------- */
+#testBtn{width:100%;margin-top:12px;font-family:'Orbitron';font-weight:800;font-size:15px;letter-spacing:3px;padding:14px;
+  background:linear-gradient(180deg,rgba(0,229,255,.16),rgba(0,229,255,.05));color:var(--cy);border:2px solid var(--cy);
+  border-radius:10px;cursor:pointer;transition:all .15s;text-shadow:0 0 10px rgba(0,229,255,.5)}
+#testBtn:hover:not(:disabled){box-shadow:0 0 22px rgba(0,229,255,.45);transform:translateY(-2px)}
+#testBtn:disabled{opacity:.35;cursor:not-allowed}
+#console{height:158px;overflow-y:auto;background:#040a12;border:1px solid var(--line2);border-radius:8px;padding:10px 12px;
+  font-size:12.5px;line-height:1.7}
+#console .ln{white-space:pre-wrap}
+#console .ok{color:var(--gr)} #console .er{color:var(--rd)} #console .sys{color:var(--am)} #console .run{color:var(--cy)}
+#console .cursor{display:inline-block;width:8px;height:13px;background:var(--gr);animation:blink 1s infinite;vertical-align:-2px}
+.glitch{animation:shake .45s}
+
+/* ---------- OVERLAYS ---------- */
+.ov{position:fixed;inset:0;background:rgba(3,6,12,.86);display:flex;align-items:center;justify-content:center;z-index:70;padding:16px;overflow:auto}
+.ov.hidden{display:none}
+.card{width:min(640px,96%);background:#0a1322;border:1px solid var(--cy);border-radius:14px;padding:24px 26px;position:relative;
+  box-shadow:0 0 40px rgba(0,229,255,.22),0 20px 0 rgba(0,0,0,.35);animation:popIn .4s cubic-bezier(.3,1.4,.5,1)}
+@keyframes popIn{from{transform:translateY(34px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.card h2{font-family:'Orbitron';font-weight:800;font-size:clamp(20px,4vw,30px);color:#fff;letter-spacing:2px;line-height:1.2}
+.card h2 span{color:var(--cy)}
+.card .sub{font-size:11.5px;letter-spacing:3px;color:var(--dim);margin:6px 0 14px}
+.card p,.card li{font-size:14px;line-height:1.6;color:#a8c4da}
+.card ul{margin:8px 0 14px 18px}
+.card li{margin-bottom:5px}
+.card b{color:var(--cy)} .card .g{color:var(--gr)} .card .m{color:var(--mg)} .card .a{color:var(--am)}
+.neonBtn{font-family:'Orbitron';font-weight:800;font-size:14px;letter-spacing:2px;padding:13px 26px;border-radius:10px;cursor:pointer;
+  background:linear-gradient(180deg,rgba(57,255,136,.2),rgba(57,255,136,.06));color:var(--gr);border:2px solid var(--gr);
+  transition:all .15s;display:block;margin:6px auto 0;text-shadow:0 0 10px rgba(57,255,136,.5)}
+.neonBtn:hover{box-shadow:0 0 22px rgba(57,255,136,.5);transform:translateY(-2px)}
+.neonBtn.alt{color:var(--cy);border-color:var(--cy);background:linear-gradient(180deg,rgba(0,229,255,.2),rgba(0,229,255,.06));text-shadow:0 0 10px rgba(0,229,255,.5)}
+.neonBtn.alt:hover{box-shadow:0 0 22px rgba(0,229,255,.5)}
+.procList{list-style:none;margin:10px 0}
+.procList li{border:1px solid var(--line2);border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:13.5px;background:rgba(8,15,28,.6)}
+.procList .advW{color:var(--cy);font-weight:bold}
+.gbox{border:1px dashed var(--am);border-radius:10px;padding:12px 14px;margin:12px 0;background:rgba(255,176,32,.05)}
+.gbox h3{font-family:'Orbitron';font-size:11px;letter-spacing:2px;color:var(--am);margin-bottom:6px}
+.vchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.vchips i{font-style:normal;font-size:12px;color:var(--mg);border:1px solid var(--mg);border-radius:99px;padding:2px 10px;background:rgba(255,61,242,.07)}
+.credits{font-family:'Orbitron';font-size:26px;color:var(--am);text-align:center;margin:8px 0;text-shadow:0 0 14px rgba(255,176,32,.5)}
+.rankTxt{text-align:center;font-family:'Orbitron';font-size:13px;letter-spacing:2px;color:var(--vio);margin-bottom:12px}
+.small{text-align:center;font-size:11px;color:var(--dim);margin-top:10px}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+.footNote{max-width:1160px;margin:0 auto;padding:0 16px 20px;font-size:11.5px;color:#3d5a78;letter-spacing:1px;position:relative;z-index:2}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div>
+
+<header>
+  <div class="logo">
+    <h1>⚙ TECH <span>REPAIR LAB</span></h1>
+    <small>PROCEDURE PROTOCOL // ENGLISH FASE F</small>
+  </div>
+  <div class="leds"><i></i><i></i><i></i></div>
+  <div class="hud">
+    <div class="chip"><b id="hudCase">1/5</b><span>CASE</span></div>
+    <div class="chip gold"><b id="hudCred">0</b><span>CREDITS</span></div>
+    <button class="iconBtn" id="gramBtn">📘 ADVERBIALS</button>
+    <button class="iconBtn" id="muteBtn">🔊</button>
+  </div>
+</header>
+
+<div id="wrap">
+  <!-- KIRI: BRIEF + FLOWCHART -->
+  <section>
+    <div class="panel" style="margin-bottom:14px">
+      <div id="caseCode"></div>
+      <div id="caseTitle"></div>
+      <p id="caseBrief"></p>
+      <div class="lampRow"><span class="lamp" id="lamp"></span> SYSTEM STATUS: <b id="statusTxt" style="color:var(--rd)">OFFLINE — REPAIR REQUIRED</b></div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">🔧 REPAIR FLOWCHART</div>
+      <div class="flow" id="flow"></div>
+    </div>
+  </section>
+
+  <!-- KANAN: BANK + TEST + CONSOLE -->
+  <section>
+    <div class="panel">
+      <div class="ptitle">🧩 INSTRUCTION BANK <span style="letter-spacing:1px;color:#3d5a78">(drag / klik)</span></div>
+      <div id="bank"></div>
+      <button id="testBtn" disabled>⚡ TEST RUN</button>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <div class="ptitle">🖥 SYSTEM CONSOLE</div>
+      <div id="console"></div>
+    </div>
+  </section>
+</div>
+
+<p class="footNote">MODULE: PROCEDURE TEXT / TECHNICAL MANUALS • IMPERATIVE VERBS + ADVERBIALS OF SEQUENCE • SMK FASE F</p>
+
+<!-- INTRO -->
+<div class="ov" id="introOv">
+  <div class="card">
+    <h2>⚙ TECHNICAL <span>PROCEDURE REPAIR</span></h2>
+    <div class="sub">TRAINING SIMULATION // PROCEDURE TEXT</div>
+    <p>Selamat datang, Teknisi! Lima sistem kritis sedang <b class="m">OFFLINE</b>. Tugasmu: menyusun ulang <b>procedure text</b> setiap perbaikan teknis ke urutan yang benar.</p>
+    <ul>
+      <li>🧩 Tarik blok instruksi (atau <b>klik</b>) ke <b>Step 1 – Step 5</b> pada flowchart.</li>
+      <li>⚡ Tekan <b>TEST RUN</b> untuk menjalankan simulasi sistem.</li>
+      <li><b class="m">✘ Urutan salah</b> → sistem <b class="m">ERROR</b> dan terhenti.</li>
+      <li><b class="g">✓ Urutan benar</b> → sistem <b class="g">ONLINE / OPERATIONAL</b> + credits!</li>
+      <li>📘 Perhatikan <b class="a">Adverbials of Sequence</b>: First, Next, Then, After that, Finally.</li>
+    </ul>
+    <button class="neonBtn" id="startBtn">▶ INITIALIZE TRAINING</button>
+    <p class="small">tekan ENTER untuk mulai</p>
+  </div>
+</div>
+
+<!-- GRAMMAR -->
+<div class="ov hidden" id="gramOv">
+  <div class="card">
+    <h2>📘 ADVERBIALS OF <span>SEQUENCE</span></h2>
+    <div class="sub">GRAMMAR DATABASE // PROCEDURE TEXT</div>
+    <ul>
+      <li><b>FIRST / FIRSTLY</b> — membuka rangkaian langkah.</li>
+      <li><b class="g">NEXT / THEN / SUBSEQUENTLY / AFTER THAT</b> — melanjutkan urutan langkah.</li>
+      <li><b class="a">FINALLY / LASTLY</b> — menutup rangkaian langkah.</li>
+    </ul>
+    <div class="gbox">
+      <h3>CARA PAKAI</h3>
+      <p>Biasanya diletakkan di <b>awal kalimat</b> dan diikuti koma, lalu kalimat <b>imperative</b> (Verb 1 tanpa subjek):</p>
+      <p style="margin-top:6px"><b>First,</b> <span class="m">identify</span> the problem. <b class="g">Next,</b> <span class="m">prepare</span> the tools. <b class="a">Finally,</b> <span class="m">verify</span> the result.</p>
+    </div>
+    <p><b>Struktur Procedure Text:</b> Goal/Aim → Steps → (Result). Ciri bahasa: imperative verbs (initialize, verify, encrypt, override, bypass…), simple present, adverbials of sequence.</p>
+    <button class="neonBtn alt" id="gramClose">✕ CLOSE</button>
+  </div>
+</div>
+
+<!-- DEBRIEF -->
+<div class="ov hidden" id="debOv">
+  <div class="card">
+    <h2 style="color:var(--gr)">✓ SYSTEM <span style="color:#fff">ONLINE</span></h2>
+    <div class="sub" id="debCase">CASE REPORT</div>
+    <div class="credits" id="debCred">+100 CREDITS</div>
+    <ul class="procList" id="debList"></ul>
+    <div class="gbox">
+      <h3>LANGUAGE FOCUS</h3>
+      <p id="debNote"></p>
+      <div class="vchips" id="debVerbs"></div>
+    </div>
+    <button class="neonBtn" id="nextBtn">NEXT CASE →</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div class="ov hidden" id="finOv">
+  <div class="card">
+    <h2>🏆 FINAL <span>REPORT</span></h2>
+    <div class="sub">ALL SYSTEMS OPERATIONAL</div>
+    <div class="credits" id="finScore">0 CREDITS</div>
+    <div class="rankTxt" id="finRank"></div>
+    <p style="text-align:center">Kelima sistem kembali online. Prosedur teknismu sudah terverifikasi — great job, Engineer!</p>
+    <button class="neonBtn" id="againBtn">🔁 RESTART TRAINING</button>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+
+/* ================= KASUS (edit di sini) ================= */
+const CASES=[
+ {code:"CASE-01 // SERVER ROOM",title:"Troubleshooting Server Downtime",
+  brief:"The main server is unresponsive and the whole office lost connection. The monitoring panel shows a total downtime alert.",
+  steps:["First, identify the cause of the downtime on the monitoring dashboard.",
+         "Next, bypass the failed power unit and connect the backup supply.",
+         "Then, initialize the server and wait for the boot sequence to complete.",
+         "After that, verify that all services are running on the status panel.",
+         "Finally, report the incident and document the solution in the log."],
+  note:"Setiap langkah memakai imperative verb (identify, bypass, initialize, verify, report) dan diurutkan dengan adverbials of sequence: First → Next → Then → After that → Finally."},
+ {code:"CASE-02 // NETWORK BAY",title:"Configuring Router Security",
+  brief:"The office router still uses factory default settings. Yesterday's security audit marked it as a critical vulnerability.",
+  steps:["First, log in to the admin panel and change the default password.",
+         "Next, update the firmware to the latest stable version.",
+         "Then, encrypt the wireless network with WPA3 protection.",
+         "After that, disable remote management and all unused ports.",
+         "Finally, verify the configuration and restart the router."],
+  note:"Perhatikan urutan logis: amankan akses dulu (password), lalu sistem (firmware), lalu jaringan (encrypt), baru pembatasan (disable), dan ditutup verifikasi (verify)."},
+ {code:"CASE-03 // WORKSHOP BENCH",title:"Replacing a Damaged Hard Drive",
+  brief:"A workstation's hard drive is making clicking sounds and fails to boot. A replacement unit and a fresh backup are available.",
+  steps:["First, shut down the workstation and disconnect all power cables.",
+         "Next, open the chassis and locate the damaged hard drive.",
+         "Then, remove the faulty drive and insert the replacement unit.",
+         "After that, initialize the new drive and format the partition.",
+         "Finally, restore the data from the backup and verify the files."],
+  note:"Keselamatan selalu pertama (shut down, disconnect), kemudian pembongkaran, pemasangan, konfigurasi, dan terakhir pemulihan + verifikasi."},
+ {code:"CASE-04 // QUARANTINE ZONE",title:"Recovering a System from Malware",
+  brief:"A design computer was infected after a staff member opened a suspicious attachment. Files are being locked by ransomware.",
+  steps:["First, isolate the infected machine from the network.",
+         "Next, boot the system into safe mode.",
+         "Then, scan the entire drive and quarantine the threats.",
+         "After that, override the modified registry entries with clean values.",
+         "Finally, update the antivirus database and monitor the system for 24 hours."],
+  note:"Urutan penanganan ancaman: isolasi → masuk safe mode → bersihkan → perbaiki sistem (override) → proteksi & pantau (monitor)."},
+ {code:"CASE-05 // ROOFTOP DEPLOYMENT",title:"Deploying a Wireless Access Point",
+  brief:"The new wing of the building has no Wi-Fi coverage. One access point must be installed and configured today.",
+  steps:["First, survey the building and determine the best access point location.",
+         "Next, mount the device and connect it to the switch with a LAN cable.",
+         "Then, configure the SSID and set a strong passphrase.",
+         "After that, encrypt the traffic and assign the IP address.",
+         "Finally, test the signal coverage and finalize the report."],
+  note:"Deployment device: perencanaan (survey) → instalasi fisik (mount, connect) → konfigurasi (configure, encrypt) → pengujian akhir (test, finalize)."}
+];
+const ADV=["FIRST","NEXT","THEN","AFTER THAT","FINALLY"];
+
+/* ================= AUDIO SYNTH ================= */
+let AC=null,muted=false;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur=.12,type="square",g=.14,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);}
+function noise(dur=.25,g=.18,fc=900,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,b=a.createBuffer(1,a.sampleRate*.4,a.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+  const s=a.createBufferSource();s.buffer=b;
+  const f=a.createBiquadFilter();f.type="lowpass";f.frequency.value=fc;
+  const v=a.createGain();v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(f);f.connect(v);v.connect(a.destination);s.start(t);s.stop(t+dur);}
+const SFX={
+  pick(){tone(880,.05,"square",.07);},
+  place(){tone(300,.08,"square",.12,190);tone(620,.05,"triangle",.07,0,.05);},
+  invalid(){tone(140,.14,"square",.12);},
+  boot(){tone(120,.5,"sawtooth",.12,640);tone(880,.07,"square",.08,0,.42);tone(1174,.07,"square",.08,0,.5);},
+  exec(i){tone(380+i*75,.09,"triangle",.13);},
+  lock(){tone(660,.07,"sine",.12);tone(990,.09,"sine",.1,0,.06);},
+  err(){tone(196,.28,"sawtooth",.16,140);tone(147,.3,"sawtooth",.16,98,.24);noise(.35,.2,400,.1);},
+  online(){[392,523,659,784,988].forEach((f,i)=>tone(f,.17,"triangle",.17,0,i*.11));
+    [261.6,329.6,392].forEach(f=>tone(f,.9,"sine",.05,0,.55));noise(.4,.06,6000,.55);}
+};
+$("#muteBtn").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ================= STATE ================= */
+let ci=0,credits=0,attempts=0,placed=Array(5).fill(null),lockedSlots=new Set(),running=false,solved=false,dragId=null;
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ================= CONSOLE ================= */
+function log(msg,cls){
+  const c=$("#console"),ln=document.createElement("div");
+  ln.className="ln "+(cls||"");ln.textContent=msg;
+  c.appendChild(ln);
+  while(c.children.length>40)c.removeChild(c.firstChild);
+  c.scrollTop=c.scrollHeight;
+}
+function consoleStandby(){
+  $("#console").innerHTML="";
+  log("> STANDBY. AWAITING REPAIR PROCEDURE…","sys");
+  log("> DRAG INSTRUCTIONS INTO THE FLOWCHART, THEN PRESS TEST RUN.");
+}
+
+/* ================= RENDER ================= */
+function hlBlock(text){
+  const p=text.split(" ");
+  let adv="",rest=text;
+  if(p[0].endsWith(",")){adv=p[0];rest=p.slice(1).join(" ");}
+  const q=rest.split(" ");
+  return (adv?`<span class="advW">${adv}</span> `:"")+`<span class="verb">${q[0]}</span> ${q.slice(1).join(" ")}`;
+}
+function buildFlow(){
+  const f=$("#flow");f.innerHTML="";
+  const start=document.createElement("div");start.className="fnode";start.textContent="⚠ FAULT DETECTED";f.appendChild(start);
+  for(let i=0;i<5;i++){
+    f.appendChild(mkWire());
+    const s=document.createElement("div");s.className="slot";s.dataset.i=i;
+    s.innerHTML=`<span class="tick"></span>
+      <div class="lbl">STEP 0${i+1} <span class="adv a${i}">${ADV[i]}</span></div>
+      <div class="drop">▣ DROP INSTRUCTION HERE</div>`;
+    s.addEventListener("dragover",e=>{if(running||solved||lockedSlots.has(i))return;e.preventDefault();s.classList.add("over");});
+    s.addEventListener("dragleave",()=>s.classList.remove("over"));
+    s.addEventListener("drop",e=>{
+      e.preventDefault();s.classList.remove("over");
+      if(running||solved||lockedSlots.has(i))return;
+      if(dragId!=null)moveToSlot(dragId,i);
+    });
+    f.appendChild(s);
+  }
+  f.appendChild(mkWire());
+  const core=document.createElement("div");core.className="core";core.id="core";
+  core.innerHTML="<b>SYSTEM CORE</b><span id='coreTxt'>OFFLINE</span>";
+  f.appendChild(core);
+}
+function mkWire(){const w=document.createElement("div");w.className="wire";return w;}
+function render(){
+  // bank
+  const bank=$("#bank");bank.innerHTML="";
+  CASES[ci].steps.forEach((t,i)=>{
+    if(placed.includes(i))return;
+    const b=mkBlock(i,t,false);bank.appendChild(b);
+  });
+  if(!bank.children.length)bank.innerHTML='<span style="font-size:12px;color:#3d5a78;letter-spacing:1px">— ALL INSTRUCTIONS DEPLOYED —</span>';
+  // slots
+  $$("#flow .slot").forEach(s=>{
+    const i=+s.dataset.i,drop=s.querySelector(".drop");
+    s.classList.remove("over","exec");
+    if(!s.classList.contains("ok")&&!s.classList.contains("err"))s.querySelector(".tick").textContent="";
+    if(placed[i]!=null){
+      drop.innerHTML="";
+      drop.appendChild(mkBlock(placed[i],CASES[ci].steps[placed[i]],lockedSlots.has(i)));
+    }else{
+      drop.innerHTML="▣ DROP INSTRUCTION HERE";
+    }
+  });
+  $("#testBtn").disabled=running||solved||placed.some(p=>p==null);
+}
+function mkBlock(id,text,locked){
+  const b=document.createElement("div");
+  b.className="block"+(locked?" locked":"");
+  b.innerHTML=hlBlock(text);
+  if(!locked){
+    b.draggable=true;
+    b.addEventListener("dragstart",()=>{dragId=id;b.classList.add("dragging");SFX.pick();});
+    b.addEventListener("dragend",()=>{b.classList.remove("dragging");dragId=null;});
+    b.addEventListener("click",()=>{
+      if(running||solved)return;
+      const from=placed.indexOf(id);
+      if(from>-1){ // dari slot → balik ke bank
+        if(lockedSlots.has(from)){SFX.invalid();return;}
+        placed[from]=null;render();SFX.pick();
+      }else{ // dari bank → slot kosong pertama
+        const empty=placed.findIndex(p=>p==null);
+        if(empty===-1){SFX.invalid();return;}
+        moveToSlot(id,empty);
+      }
+    });
+  }
+  return b;
+}
+function moveToSlot(id,slot){
+  if(running||solved||lockedSlots.has(slot)){SFX.invalid();return;}
+  const from=placed.indexOf(id);
+  if(from>-1)placed[from]=null;
+  const occ=placed[slot];
+  if(occ!=null&&occ!==id){
+    if(from>-1)placed[from]=occ; // tukar antar slot
+  }
+  placed[slot]=id;
+  clearSlotState(slot);
+  render();SFX.place();
+}
+function clearSlotState(i){
+  const s=$$("#flow .slot")[i];
+  s.classList.remove("ok","err","exec");s.querySelector(".tick").textContent="";
+}
+$("#bank").addEventListener("dragover",e=>{if(running||solved)return;e.preventDefault();$("#bank").classList.add("over");});
+$("#bank").addEventListener("dragleave",()=>$("#bank").classList.remove("over"));
+$("#bank").addEventListener("drop",e=>{
+  e.preventDefault();$("#bank").classList.remove("over");
+  if(dragId==null||running||solved)return;
+  const from=placed.indexOf(dragId);
+  if(from>-1&&!lockedSlots.has(from)){placed[from]=null;render();SFX.pick();}
+});
+
+/* ================= TEST RUN ================= */
+$("#testBtn").addEventListener("click",()=>{
+  if(running||solved||placed.some(p=>p==null))return;
+  ac();if(AC&&AC.state==="suspended")AC.resume();
+  running=true;$("#testBtn").disabled=true;$("#testBtn").textContent="⚡ TESTING…";
+  $("#coreTxt").textContent="TESTING";$("#core").classList.add("testing");
+  $$("#flow .wire").forEach(w=>w.classList.add("live"));
+  SFX.boot();
+  log("> TEST RUN INITIATED","sys");log("> POWER FLOW: STABLE — SEQUENCE CHECK STARTED","sys");
+  for(let i=0;i<5;i++){
+    setTimeout(()=>{
+      const s=$$("#flow .slot")[i];s.classList.add("exec");
+      log(`> STEP 0${i+1} :: ${CASES[ci].steps[placed[i]]}`,"run");
+      SFX.exec(i);
+    },700+i*640);
+  }
+  setTimeout(()=>evaluate(),700+5*640+350);
+});
+function evaluate(){
+  const wrong=placed.findIndex((id,i)=>id!==i);
+  if(wrong===-1)successRun();else failRun(wrong);
+}
+function failRun(w){
+  SFX.err();
+  for(let i=0;i<w;i++){lockedSlots.add(i);const s=$$("#flow .slot")[i];s.classList.remove("exec");s.classList.add("ok");s.querySelector(".tick").textContent="✔";}
+  const ws=$$("#flow .slot")[w];ws.classList.remove("exec");ws.classList.add("err");ws.querySelector(".tick").textContent="✘";
+  $("#wrap").classList.add("glitch");setTimeout(()=>$("#wrap").classList.remove("glitch"),500);
+  log(`✘ FATAL ERROR AT STEP 0${w+1}`,"er");
+  log("✘ UNEXPECTED OPERATION DETECTED — SYSTEM HALTED","er");
+  log(`> HINT: CHECK THE ${ADV[w]} PHASE. RECONFIGURE STEP 0${w+1} ONWARD.`,"sys");
+  $("#coreTxt").textContent="ERROR";$("#core").classList.remove("testing");
+  attempts++;
+  setTimeout(()=>{
+    $("#coreTxt").textContent="OFFLINE";
+    $$("#flow .wire").forEach(w=>w.classList.remove("live"));
+    running=false;$("#testBtn").textContent="⚡ TEST RUN";render();
+  },900);
+  render();
+}
+function successRun(){
+  solved=true;
+  for(let i=0;i<5;i++){
+    lockedSlots.add(i);
+    const s=$$("#flow .slot")[i];s.classList.remove("exec");s.classList.add("ok");s.querySelector(".tick").textContent="✔";
+  }
+  render();
+  $("#coreTxt").textContent="ONLINE";$("#core").classList.remove("testing");$("#core").classList.add("online");
+  $("#lamp").classList.add("online");$("#statusTxt").textContent="ONLINE — OPERATIONAL";$("#statusTxt").style.color="var(--gr)";
+  SFX.online();confettiBurst();
+  log("✓ ALL SEQUENCES VALID","ok");
+  log("✓ SYSTEM ONLINE — OPERATIONAL STATUS: 100%","ok");
+  const gain=Math.max(20,100-20*attempts);
+  credits+=gain;$("#hudCred").textContent=credits;
+  setTimeout(()=>showDebrief(gain),1500);
+}
+
+/* ================= DEBRIEF / NEXT ================= */
+function showDebrief(gain){
+  $("#debCase").textContent=CASES[ci].code+" — "+CASES[ci].title.toUpperCase();
+  $("#debCred").textContent=`+${gain} CREDITS${attempts>0?`  (${attempts}× TEST RUN)`:"  • PERFECT!"}`;
+  const list=$("#debList");list.innerHTML="";
+  CASES[ci].steps.forEach(t=>{
+    const li=document.createElement("li");li.innerHTML=hlBlock(t);list.appendChild(li);
+  });
+  $("#debNote").textContent=CASES[ci].note;
+  const vc=$("#debVerbs");vc.innerHTML="";
+  CASES[ci].steps.forEach(t=>{
+    const v=t.split(" ")[1].replace(/[^a-z]/gi,"");
+    const chip=document.createElement("i");chip.textContent=v;vc.appendChild(chip);
+  });
+  $("#nextBtn").textContent=(ci===CASES.length-1)?"FINAL REPORT 🏁":"NEXT CASE →";
+  $("#debOv").classList.remove("hidden");
+}
+$("#nextBtn").addEventListener("click",()=>{
+  ac();SFX.pick();
+  $("#debOv").classList.add("hidden");
+  ci++;
+  if(ci>=CASES.length)showFinal();else loadCase();
+});
+function loadCase(){
+  placed=Array(5).fill(null);lockedSlots=new Set();attempts=0;running=false;solved=false;
+  $("#hudCase").textContent=(ci+1)+"/"+CASES.length;
+  $("#caseCode").textContent=CASES[ci].code;
+  $("#caseTitle").textContent=CASES[ci].title;
+  $("#caseBrief").textContent=CASES[ci].brief;
+  $("#lamp").classList.remove("online");
+  $("#statusTxt").textContent="OFFLINE — REPAIR REQUIRED";$("#statusTxt").style.color="var(--rd)";
+  $("#core")?.classList.remove("online","testing");
+  buildFlow();render();consoleStandby();
+  $("#testBtn").textContent="⚡ TEST RUN";
+  log(`> NEW CASE LOADED: ${CASES[ci].title.toUpperCase()}`,"sys");
+}
+function showFinal(){
+  $("#finScore").textContent=credits+" CREDITS";
+  $("#finRank").textContent="RANK: "+(credits>=480?"S-CLASS • LEGENDARY ENGINEER 👑":
+    credits>=400?"A-CLASS • SENIOR TECHNICIAN 🛠":
+    credits>=300?"B-CLASS • CERTIFIED REPAIR PRO 🔧":
+    credits>=180?"C-CLASS • JUNIOR TECHNICIAN 🔩":"D-CLASS • APPRENTICE — KEEP PRACTICING ⚙");
+  $("#finOv").classList.remove("hidden");
+  confettiBurst();setTimeout(confettiBurst,500);
+}
+$("#againBtn").addEventListener("click",()=>{
+  $("#finOv").classList.add("hidden");
+  ci=0;credits=0;$("#hudCred").textContent=0;loadCase();
+});
+
+/* ================= OVERLAY KECIL ================= */
+$("#startBtn").addEventListener("click",startTrain);
+function startTrain(){
+  ac();if(AC&&AC.state==="suspended")AC.resume();
+  SFX.boot();
+  $("#introOv").classList.add("hidden");
+}
+$("#gramBtn").addEventListener("click",()=>{ac();SFX.pick();$("#gramOv").classList.remove("hidden");});
+$("#gramClose").addEventListener("click",()=>{SFX.pick();$("#gramOv").classList.add("hidden");});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(!$("#introOv").classList.contains("hidden"))startTrain();
+    else if(!$("#gramOv").classList.contains("hidden"))$("#gramClose").click();
+    else if(!$("#debOv").classList.contains("hidden"))$("#nextBtn").click();
+    else if(!$("#finOv").classList.contains("hidden"))$("#againBtn").click();
+  }
+});
+
+/* ================= KONFETI ================= */
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],run=false;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCv();window.addEventListener("resize",sizeCv);
+function confettiBurst(){
+  const cols=["#00e5ff","#ff3df2","#39ff88","#ffb020","#ffffff","#b18cff"];
+  for(let i=0;i<150;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,
+    vx:(Math.random()-.5)*2.6,vy:2+Math.random()*3.4,s:5+Math.random()*6,r:Math.random()*6.3,
+    vr:(Math.random()-.5)*.26,c:cols[i%cols.length]});
+  if(!run){run=true;requestAnimationFrame(loop);}
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.y<cv.height+30);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();});
+  if(parts.length)requestAnimationFrame(loop);
+  else{run=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* init */
+buildFlow();loadCase();
+</script>
+</body>
+</html>
