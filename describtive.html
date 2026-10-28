@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Descriptive Race — Balap Mobil Bahasa Inggris SMK Kelas X</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Nunito:wght@700;800;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0d0a26; --card:#141230; --line:#34305e;
+  --neonC:#35e0ff; --neonM:#ff4fd8; --neonY:#ffd23f; --neonG:#3ee06b;
+  --siswa:#ff4757; --komp:#2ee6d6; --text:#eef0ff;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;color:var(--text);user-select:none;min-height:100dvh;
+  background:radial-gradient(1000px 500px at 50% -10%,#241647,#0d0a26 65%),#0d0a26;
+  display:flex;flex-direction:column;align-items:center}
+button{font-family:inherit;cursor:pointer}
+
+/* ---------- HUD ---------- */
+#hud{width:min(1060px,97%);display:flex;align-items:center;gap:12px;padding:14px 2px 6px;flex-wrap:wrap}
+.team-card{flex:1;max-width:330px;background:var(--card);border:2.5px solid var(--line);border-radius:14px;
+  padding:8px 12px;display:flex;align-items:center;gap:10px;position:relative;box-shadow:0 5px 0 rgba(0,0,0,.4)}
+.team-card.siswa{border-color:#7e2430}.team-card.komp{border-color:#136c66}
+.team-card .avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:20px;flex:none;border:2px solid}
+.siswa .avatar{background:#3a141a;border-color:var(--siswa)}
+.komp .avatar{background:#0e2e2c;border-color:var(--komp)}
+.t-name{font-family:'Bungee';font-size:14px;letter-spacing:1px;line-height:1.1}
+.siswa .t-name{color:#ff98a2}.komp .t-name{color:#8ffff5}
+.t-sub{font-size:10.5px;font-weight:800;opacity:.6;margin-top:1px}
+.t-pos{margin-left:auto;text-align:right;flex:none}
+.t-pos b{font-family:'Orbitron';font-size:24px;line-height:1;display:block}
+.siswa .t-pos b{color:var(--siswa);text-shadow:0 0 12px rgba(255,71,87,.6)}
+.komp .t-pos b{color:var(--komp);text-shadow:0 0 12px rgba(46,230,214,.6)}
+.t-pos span{font-size:9px;font-weight:900;letter-spacing:1.5px;opacity:.7}
+.hud-mid{text-align:center;flex:none;padding:0 4px}
+.game-title{font-family:'Bungee';font-size:clamp(19px,2.6vw,29px);line-height:1;color:var(--neonY);
+  text-shadow:0 0 18px rgba(255,210,63,.5),0 3px 0 #6b4c12}
+.game-title em{font-style:normal;color:var(--neonC);text-shadow:0 0 18px rgba(53,224,255,.55),0 3px 0 #10505c}
+.hud-tag{font-size:9.5px;font-weight:900;letter-spacing:2.5px;opacity:.65;margin-top:3px}
+#muteBtn{position:fixed;top:10px;right:12px;z-index:45;width:42px;height:42px;border-radius:50%;
+  border:2px solid var(--line);background:var(--card);font-size:17px;box-shadow:0 4px 0 rgba(0,0,0,.4)}
+#muteBtn:active{transform:translateY(2px);box-shadow:none}
+
+/* ---------- ARENA ---------- */
+#trackWrap{width:min(1060px,97%);flex:1;min-height:288px;position:relative;margin:4px 0 6px;
+  border:3px solid var(--line);border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#0d0a26 0%,#241647 40%,#5a2450 66%,#c2455e 76%,#141230 76.5%);
+  box-shadow:0 0 0 3px #06040f,0 12px 30px rgba(0,0,0,.55)}
+#stars i{position:absolute;width:2.5px;height:2.5px;border-radius:50%;background:#fff;animation:twk 2.6s ease-in-out infinite}
+@keyframes twk{0%,100%{opacity:.25}50%{opacity:1}}
+#sun{position:absolute;left:50%;bottom:196px;width:190px;height:190px;transform:translateX(-50%);border-radius:50%;
+  background:linear-gradient(#ffd23f,#ff5e78);box-shadow:0 0 60px rgba(255,120,120,.55);opacity:.92;z-index:0;overflow:hidden}
+#sun::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 14px,#241647 14px 19px)}
+#city{position:absolute;left:0;right:0;bottom:222px;height:120px;display:flex;align-items:flex-end;justify-content:center;gap:3px;z-index:1;pointer-events:none}
+.bld{flex:none;background:#0e0c22;box-shadow:0 -2px 0 rgba(53,224,255,.2);position:relative}
+.bld::before{content:"";position:absolute;inset:5px 3px;opacity:var(--lit);
+  background:repeating-linear-gradient(0deg,rgba(255,214,90,.5) 0 3px,transparent 3px 9px),
+             repeating-linear-gradient(90deg,rgba(255,214,90,.5) 0 3px,transparent 3px 8px)}
+
+#timerHud{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:10px;
+  background:rgba(10,8,30,.82);border:2px solid var(--neonM);border-radius:99px;padding:6px 16px;
+  box-shadow:0 0 18px rgba(255,79,216,.35);transition:opacity .3s}
+#timerHud.dim{opacity:.3}
+#timerHud .lbl{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#ffb1ec;text-align:right;line-height:1.2}
+#tNum{font-family:'Orbitron';font-weight:800;font-size:30px;color:var(--neonY);min-width:44px;text-align:center;
+  text-shadow:0 0 14px rgba(255,210,63,.7)}
+#timerHud.low #tNum{color:#ff5d5d;animation:blinkT .4s steps(2) infinite}
+@keyframes blinkT{50%{opacity:.35}}
+#tBar{width:120px;height:9px;border:2px solid #5c5790;border-radius:99px;overflow:hidden;background:#191537}
+#tFill{height:100%;width:100%;background:linear-gradient(90deg,var(--neonM),var(--neonY))}
+
+#road{position:absolute;left:0;right:0;bottom:0;height:224px;background:linear-gradient(#2a2d3a,#15171f);z-index:2}
+#road::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--neonC);box-shadow:0 0 14px var(--neonC)}
+#road::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--neonM);box-shadow:0 0 14px var(--neonM)}
+#divider{position:absolute;left:0;right:0;top:calc(50% - 2px);border-top:4px dashed rgba(255,255,255,.45)}
+.laneTag{position:absolute;left:8px;font-size:10px;font-weight:900;letter-spacing:1px;padding:2px 9px;border-radius:6px;z-index:6;border:2px solid}
+.laneTag.s{top:14px;color:#ffb3bb;border-color:var(--siswa);background:rgba(58,20,26,.8)}
+.laneTag.k{top:calc(50% + 14px);color:#a7fff6;border-color:var(--komp);background:rgba(14,46,44,.8)}
+.vline{position:absolute;top:6px;bottom:6px;width:12px;border:2px solid rgba(0,0,0,.4);z-index:3;
+  background:repeating-conic-gradient(#111 0 25%,#fff 0 50%) 0 0/12px 12px}
+#finishLine{width:15px;box-shadow:0 0 16px rgba(255,255,255,.55)}
+#ticks span{position:absolute;bottom:4px;font-family:'Orbitron';font-size:9px;color:#8f8bc0;z-index:4}
+#ticks i{position:absolute;bottom:16px;width:2px;height:8px;background:#6f6aa8;z-index:4}
+
+/* ---------- MOBIL ---------- */
+.car{position:absolute;width:120px;height:66px;z-index:5;transition:left .9s cubic-bezier(.25,1.3,.4,1)}
+#carS{top:26px}#carK{top:132px}
+.car svg{width:100%;height:100%;display:block;animation:vibr .14s linear infinite alternate}
+@keyframes vibr{from{transform:translateY(0)}to{transform:translateY(1px)}}
+.car .wheel{transform-box:fill-box;transform-origin:center}
+.car.moving .wheel{animation:wspin .38s linear infinite}
+@keyframes wspin{to{transform:rotate(360deg)}}
+.car .blink{animation:blinkA 1s steps(2) infinite}
+@keyframes blinkA{50%{opacity:.15}}
+.glow{position:absolute;left:10%;right:10%;bottom:-5px;height:10px;border-radius:50%;filter:blur(6px);opacity:.85;z-index:-1}
+.gs{background:var(--neonY)}.gk{background:var(--komp)}
+.flame{display:none;position:absolute;left:-17px;bottom:12px;width:26px;height:13px;z-index:-1;
+  background:linear-gradient(90deg,#ff7a2f,var(--neonY));clip-path:polygon(0 50%,55% 0,100% 18%,78% 50%,100% 82%,55% 100%);
+  animation:flick .12s alternate infinite}
+.flame.fk{background:linear-gradient(90deg,var(--neonC),#aefff6)}
+.car.moving .flame{display:block}
+@keyframes flick{from{transform:scaleX(.8)}to{transform:scaleX(1.3)}}
+.beam{position:absolute;right:-44px;top:26px;width:56px;height:26px;pointer-events:none;
+  background:linear-gradient(90deg,rgba(255,236,170,.32),transparent);clip-path:polygon(0 35%,100% 0,100% 100%,0 65%)}
+.puff{position:absolute;left:-6px;bottom:10px;width:13px;height:10px;border-radius:50%;background:rgba(200,200,210,.7);
+  animation:puffB .75s ease-out forwards;z-index:-1}
+@keyframes puffB{to{transform:translate(-34px,-7px) scale(2.1);opacity:0}}
+.sline{position:absolute;height:3px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff);opacity:.8;
+  animation:sld .5s ease-out forwards;z-index:4}
+@keyframes sld{to{transform:translateX(-70px);opacity:0}}
+
+#stamp{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:9;pointer-events:none;opacity:0;
+  font-family:'Bungee';font-size:clamp(20px,4.6vw,44px);letter-spacing:1px;white-space:nowrap;text-shadow:0 3px 0 rgba(0,0,0,.6)}
+#stamp.good{color:var(--neonG);text-shadow:0 0 22px rgba(62,224,107,.8),0 3px 0 rgba(0,0,0,.6)}
+#stamp.bad{color:#ff8a7a;text-shadow:0 0 22px rgba(255,93,93,.8),0 3px 0 rgba(0,0,0,.6)}
+#stamp.kom{color:var(--komp);text-shadow:0 0 22px rgba(46,230,214,.8),0 3px 0 rgba(0,0,0,.6)}
+#stamp.show{animation:bpop 1.5s ease forwards}
+@keyframes bpop{0%{opacity:0;transform:translate(-50%,-50%) scale(2.1)}
+  16%{opacity:1;transform:translate(-50%,-50%) scale(1)}72%{opacity:1}100%{opacity:0;transform:translate(-50%,-62%) scale(1)}}
+
+/* ---------- PANEL SOAL ---------- */
+#qa{width:min(940px,97%);background:var(--card);border:3px solid var(--line);border-radius:16px;
+  box-shadow:0 8px 0 rgba(0,0,0,.4),0 0 26px rgba(53,224,255,.07);padding:13px 16px 14px;margin-bottom:14px;position:relative;z-index:5}
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.chip-soal{font-family:'Orbitron';font-weight:800;font-size:12px;color:#0d0a26;background:var(--neonY);
+  border-radius:8px;padding:4px 11px;letter-spacing:1px;box-shadow:0 0 14px rgba(255,210,63,.4)}
+.rule-note{font-size:10.5px;font-weight:800;color:#9c97d8;letter-spacing:.4px}
+#qText{font-size:clamp(15px,2vw,18.5px);font-weight:900;line-height:1.4;margin-bottom:11px}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#opts.locked .opt{pointer-events:none}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;background:#1c1940;border:2.5px solid #3d3870;color:var(--text);
+  border-radius:11px;padding:8px 12px;font-weight:800;font-size:14px;line-height:1.3;transition:transform .12s,box-shadow .12s,border-color .15s}
+.opt:hover{transform:translateY(-2px);border-color:var(--neonC);box-shadow:0 0 16px rgba(53,224,255,.28)}
+.opt .key{flex:none;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:'Bungee';font-size:13px;color:#0d0a26}
+.kA{background:var(--neonC)}.kB{background:var(--neonM)}.kC{background:var(--neonY)}.kD{background:var(--neonG)}
+.opt.correct{border-color:var(--neonG);background:#11331f;box-shadow:0 0 20px rgba(62,224,107,.4)}
+.opt.wrong{border-color:#ff5d5d;background:#3a1416;animation:shake .4s}
+.opt.dim{opacity:.4}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+#fb{display:none;margin-top:11px;border-top:2px dashed #3d3870;padding-top:9px;position:relative;overflow:hidden}
+#fb.show{display:block;animation:fbin .3s ease}
+@keyframes fbin{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+#fbVerdict{font-family:'Bungee';font-size:14px;letter-spacing:.5px;display:block;margin-bottom:4px}
+#fbVerdict.good{color:var(--neonG)}#fbVerdict.bad{color:#ff8a7a}#fbVerdict.kom{color:var(--komp)}
+#fbWhy{font-size:13px;font-weight:700;color:#cfd0f2;line-height:1.4}
+#advBar{position:absolute;left:0;bottom:0;height:4px;background:linear-gradient(90deg,var(--neonC),var(--neonM));width:0}
+.keyhint{font-size:10px;font-weight:800;color:#6f6aa8;margin-top:6px}
+
+/* ---------- OVERLAYS ---------- */
+.overlay{position:fixed;inset:0;background:rgba(6,4,18,.85);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;overflow:auto}
+.overlay.hidden{display:none}
+.card{width:min(600px,96%);background:var(--card);border:3px solid var(--neonC);border-radius:18px;padding:24px 26px;
+  box-shadow:0 0 40px rgba(53,224,255,.25),0 14px 0 rgba(0,0,0,.4);animation:cin .45s cubic-bezier(.3,1.4,.5,1);position:relative}
+@keyframes cin{from{transform:translateY(36px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+.card h1{font-family:'Bungee';font-size:clamp(28px,5.6vw,46px);line-height:1;text-align:center;color:var(--neonY);
+  text-shadow:0 0 24px rgba(255,210,63,.5)}
+.card h1 em{font-style:normal;color:var(--neonC);text-shadow:0 0 24px rgba(53,224,255,.55)}
+.card .sub{text-align:center;font-size:10.5px;font-weight:900;letter-spacing:3px;color:#9c97d8;margin:6px 0 14px}
+.vs-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px}
+.vs-team{border:2.5px solid;border-radius:12px;padding:9px 14px;text-align:center;background:#100e28;min-width:130px}
+.vs-team .em{font-size:28px;display:block}
+.vs-team .nm{font-family:'Bungee';font-size:12px}
+.vs-team .ro{font-size:10px;font-weight:800;opacity:.65}
+.vs-team.left{border-color:var(--siswa)}.vs-team.left .nm{color:#ff98a2}
+.vs-team.right{border-color:var(--komp)}.vs-team.right .nm{color:#8ffff5}
+.vs-badge{font-family:'Bungee';font-size:16px;width:48px;height:48px;border-radius:50%;background:var(--neonY);color:#0d0a26;
+  display:grid;place-items:center;transform:rotate(-8deg);box-shadow:0 0 18px rgba(255,210,63,.5)}
+.rules{list-style:none;margin-bottom:14px}
+.rules li{display:flex;gap:9px;font-size:13.5px;font-weight:700;line-height:1.4;padding:5px 0;border-bottom:1px dashed #3d3870;color:#d6d8f5}
+.rules li:last-child{border:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px}
+.chips span{font-size:11px;font-weight:800;background:#100e28;border:2px solid #3d3870;border-radius:99px;padding:4px 12px;color:#cfd0f2}
+.big-btn{display:block;margin:0 auto;font-family:'Bungee';font-size:19px;letter-spacing:1px;color:#0d0a26;
+  background:linear-gradient(#ffe98a,var(--neonY));border:3px solid #7c5c22;border-radius:14px;padding:12px 32px;
+  box-shadow:0 6px 0 #8a681f,0 0 24px rgba(255,210,63,.35);transition:transform .1s}
+.big-btn:hover{transform:translateY(-2px)}
+.big-btn:active{transform:translateY(3px);box-shadow:none}
+.card-foot{text-align:center;font-size:10.5px;font-weight:800;color:#6f6aa8;margin-top:12px}
+
+#goOv{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;pointer-events:none}
+#goOv.show{display:flex}
+#goText{font-family:'Bungee';font-size:clamp(70px,16vw,150px);color:var(--neonY);text-shadow:0 0 40px rgba(255,210,63,.8),0 6px 0 #6b4c12}
+#goText.zoom{animation:goz .62s cubic-bezier(.2,1.4,.4,1)}
+@keyframes goz{from{transform:scale(2.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+#resEmoji{font-size:58px;text-align:center;display:block;animation:bob 1.3s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-7px)}}
+#resTitle{font-family:'Bungee';font-size:clamp(24px,4.6vw,38px);text-align:center;line-height:1.1;margin:6px 0}
+#resMsg{text-align:center;font-weight:800;font-size:14px;color:#d6d8f5;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.stat{background:#100e28;border:2px solid #3d3870;border-radius:11px;text-align:center;padding:8px 4px}
+.stat b{font-family:'Orbitron';font-size:18px;display:block;color:var(--neonY)}
+.stat span{font-size:8.5px;font-weight:900;letter-spacing:.8px;color:#9c97d8}
+#resRank{text-align:center;font-family:'Bungee';font-size:14px;color:var(--neonC);margin-bottom:14px;letter-spacing:1px}
+.res-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.res-btns button{font-family:'Bungee';font-size:14px;border-radius:11px;padding:10px 18px;border:2.5px solid;letter-spacing:.5px;transition:transform .1s}
+.res-btns button:hover{transform:translateY(-2px)}
+#againBtn{background:linear-gradient(#ffe98a,var(--neonY));color:#0d0a26;border-color:#7c5c22;box-shadow:0 5px 0 #8a681f}
+#menuBtn{background:#100e28;color:var(--text);border-color:#3d3870;box-shadow:0 5px 0 rgba(0,0,0,.5)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:90}
+@media (max-width:860px){
+  .hud-mid{order:-1;flex-basis:100%}
+  #opts{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  #timerHud .lbl{font-size:8.5px}
+  #tBar{width:70px}
+}
+</style>
+</head>
+<body>
+
+<header id="hud">
+  <div class="team-card siswa">
+    <div class="avatar">🎓</div>
+    <div><div class="t-name">TIM SISWA</div><div class="t-sub">TIM KIRI • PENANTANG</div></div>
+    <div class="t-pos"><b id="posS">0</b><span>LANGKAH /10</span></div>
+  </div>
+  <div class="hud-mid">
+    <div class="game-title">DESCRIPTIVE <em>RACE</em></div>
+    <div class="hud-tag">BAHASA INGGRIS • SMK KELAS X</div>
+  </div>
+  <div class="team-card komp">
+    <div class="avatar">🤖</div>
+    <div><div class="t-name">TIM KOMPUTER</div><div class="t-sub">TIM KANAN • JAWAB DI DETIK KE-6</div></div>
+    <div class="t-pos"><b id="posK">0</b><span>LANGKAH /10</span></div>
+  </div>
+</header>
+<button id="muteBtn" title="Suara">🔊</button>
+
+<div id="trackWrap">
+  <div id="stars"></div>
+  <div id="sun"></div>
+  <div id="city"></div>
+  <div id="timerHud">
+    <div class="lbl" id="tLabel">KOMPUTER<br>MENJAWAB DALAM</div>
+    <div id="tNum">6</div>
+    <div id="tBar"><div id="tFill"></div></div>
+  </div>
+  <div id="road">
+    <div id="divider"></div>
+    <span class="laneTag s">🎓 SISWA</span>
+    <span class="laneTag k">🤖 KOMPUTER</span>
+    <div class="vline" id="startLine"></div>
+    <div class="vline" id="finishLine"></div>
+    <div id="ticks"></div>
+    <div class="car siswa" id="carS"></div>
+    <div class="car komp" id="carK"></div>
+    <div id="stamp"></div>
+  </div>
+</div>
+
+<section id="qa">
+  <div class="qhead">
+    <span class="chip-soal" id="chipSoal">SOAL 1/10</span>
+    <span class="rule-note">⚡ Jawab benar SEBELUM detik ke-6 untuk merebut langkah!</span>
+  </div>
+  <p id="qText"></p>
+  <div id="opts"></div>
+  <div id="fb">
+    <b id="fbVerdict"></b>
+    <span id="fbWhy"></span>
+    <div id="advBar"></div>
+  </div>
+  <div class="keyhint">⌨️ Klik opsi atau tekan A–D / 1–4 • Enter untuk lanjut lebih cepat</div>
+</section>
+
+<!-- INTRO -->
+<div class="overlay" id="intro">
+  <div class="card">
+    <h1>DESCRIPTIVE <em>RACE 🏁</em></h1>
+    <div class="sub">BALAP MOBIL • DESCRIPTIVE TEXT • SMK KELAS X</div>
+    <div class="vs-row">
+      <div class="vs-team left"><span class="em">🏎️</span><div class="nm">TIM SISWA</div><div class="ro">kiri • kamu yang jawab</div></div>
+      <div class="vs-badge">VS</div>
+      <div class="vs-team right"><span class="em">🤖</span><div class="nm">TIM KOMPUTER</div><div class="ro">kanan • mesin tanpa ampun</div></div>
+    </div>
+    <ul class="rules">
+      <li>📢 Ada <b>10 pertanyaan</b> tentang descriptive text. Baca cepat, jawab tepat!</li>
+      <li>✅ Jawaban <b>BENAR</b> → mobil Siswa <b>maju 1 langkah</b>.</li>
+      <li>❌ Jawaban <b>SALAH</b> → mobil Siswa <b>tetap di tempat</b>.</li>
+      <li>⏱ <b>Komputer selalu menjawab benar tepat pada DETIK KE-6</b>. Jawab benar sebelum itu, atau komputer yang melaju!</li>
+      <li>🏁 Garis finis = 10 langkah. Jawab <b>semua benar</b> → Siswa menang telak!</li>
+    </ul>
+    <div class="chips"><span>⏱ 6 detik / soal</span><span>🧠 10 soal</span><span>💡 ada pembahasan</span><span>⌨️ A–D atau klik</span></div>
+    <button class="big-btn" id="startBtn">🚦 GAS!</button>
+    <div class="card-foot">tekan Enter ↵ untuk mulai</div>
+  </div>
+</div>
+
+<div id="goOv"><div id="goText">3</div></div>
+
+<!-- HASIL -->
+<div class="overlay hidden" id="result">
+  <div class="card">
+    <span id="resEmoji">🏆</span>
+    <h2 id="resTitle">TIM SISWA MENANG!</h2>
+    <p id="resMsg"></p>
+    <div class="stats">
+      <div class="stat"><b id="stS">0</b><span>LANGKAH SISWA</span></div>
+      <div class="stat"><b id="stK">0</b><span>LANGKAH KOMPUTER</span></div>
+      <div class="stat"><b id="stFast">–</b><span>JAWABAN TERCEPAT</span></div>
+      <div class="stat"><b id="stAvg">–</b><span>RATA-RATA WAKTU</span></div>
+    </div>
+    <div id="resRank"></div>
+    <div class="res-btns">
+      <button id="againBtn">🔁 BALAPAN LAGI</button>
+      <button id="menuBtn">🏠 MENU</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>document.querySelectorAll(s);
+
+/* ============ SOAL — DESCRIPTIVE TEXT (edit di sini) ============ */
+const QUESTIONS=[
+ {q:"What is the purpose of a descriptive text?",
+  c:"To describe a particular person, place, or thing",
+  w:["To tell a legend or myth","To show steps of how to make something","To persuade the reader"],
+  why:"Descriptive text bertujuan menggambarkan orang/tempat/benda tertentu secara rinci. Cerita rakyat = narrative; langkah-langkah = procedure."},
+ {q:"The generic structure of a descriptive text is…",
+  c:"Identification – Description",
+  w:["Orientation – Complication – Resolution","Goal – Steps","Thesis – Argument"],
+  why:"Struktur descriptive text: Identification (perkenalan subjek) lalu Description (rincian ciri-cirinya)."},
+ {q:"The part that introduces who or what is being described is called…",
+  c:"Identification",w:["Description","Resolution","Coda"],
+  why:"Identification adalah paragraf pembuka yang memperkenalkan subjek yang akan dideskripsikan."},
+ {q:'"My sister ___ long black hair."',
+  c:"has",w:["have","is","are"],
+  why:'Subjek "my sister" (she) adalah orang ketiga tunggal → memakai "has".'},
+ {q:"Descriptive texts mostly use the…",
+  c:"Simple Present Tense",w:["Simple Past Tense","Future Tense","Past Continuous Tense"],
+  why:"Descriptive text memakai simple present tense karena menyatakan fakta/ciri yang berlaku: is, has, lives."},
+ {q:'"Borobudur Temple is magnificent." The word "magnificent" is…',
+  c:"An adjective",w:["A verb","A noun","An adverb"],
+  why:"Adjective (kata sifat) mendeskripsikan kata benda: big, beautiful, magnificent, fluffy."},
+ {q:'"My father is a mechanic." The sentence tells us about a person\'s…',
+  c:"Occupation",w:["Age","Hobby","Address"],
+  why:"Mechanic (montir) adalah pekerjaan → occupation."},
+ {q:'The closest meaning of "beautiful" is…',
+  c:"Pretty",w:["Ugly","Angry","Sleepy"],
+  why:"Beautiful = cantik/indah, sinonimnya pretty. Ugly = jelek (antonim)."},
+ {q:'The opposite of "expensive" is…',
+  c:"Cheap",w:["Slow","Heavy","Tall"],
+  why:"Expensive = mahal, lawan katanya cheap = murah."},
+ {q:'Read: "I have a rabbit named Snowy. Its fur is white and fluffy." What is being described?',
+  c:"A rabbit",w:["A cat","A dog","A bird"],
+  why:"Teks menggambarkan seekor kelinci (rabbit) bernama Snowy."}
+];
+
+/* ============ MOBIL (SVG) ============ */
+function siswaCarSVG(){return `<svg viewBox="0 0 170 92">
+<ellipse cx="86" cy="84" rx="74" ry="5" fill="rgba(0,0,0,.45)"/>
+<path d="M14 62 Q11 48 24 43 L36 40 L43 19 Q45 14 53 14 L108 14 Q121 15 131 33 L150 38 Q163 42 164 52 Q165 62 153 64 L22 64 Q14 64 14 62 Z" fill="#ff4757" stroke="#7e1d28" stroke-width="2.5"/>
+<path d="M16 56 L163 56 Q165 62 153 64 L22 64 Q15 63 16 56 Z" fill="#d92b3f"/>
+<path d="M48 20 L104 20 Q114 21 121 32 L121 40 L46 40 L46 26 Z" fill="#bfe9ff" stroke="#22303f" stroke-width="2"/>
+<line x1="84" y1="20" x2="84" y2="40" stroke="#22303f" stroke-width="3"/>
+<circle cx="66" cy="31" r="7" fill="#ffcf9f"/><path d="M59 28 q7 -7 14 0 z" fill="#33302c"/>
+<circle cx="69" cy="31" r="1.3" fill="#26313d"/><path d="M66 35 q3 2 5 .4" stroke="#b3552e" stroke-width="1.4" fill="none"/>
+<path d="M14 50 L163 50" stroke="#fff" stroke-width="5" opacity=".9"/>
+<circle cx="98" cy="52" r="10.5" fill="#fff" stroke="#22303f" stroke-width="2.5"/>
+<text x="98" y="56.5" text-anchor="middle" font-size="12" font-family="Bungee" fill="#d92b3f">10</text>
+<line x1="38" y1="18" x2="38" y2="6" stroke="#22303f" stroke-width="2"/>
+<path d="M38 6 l12 3 -12 4 z" fill="#ffd23f"/>
+<rect x="156" y="46" width="8" height="7" rx="2" fill="#ffe27a" stroke="#c9a13b"/>
+<rect x="12" y="46" width="5" height="8" rx="2" fill="#ff8d8d"/>
+<rect x="6" y="58" width="10" height="5" rx="2" fill="#6b7280"/>
+<g class="wheel"><circle cx="44" cy="64" r="15" fill="#191d26"/><circle cx="44" cy="64" r="12.5" fill="#2b3140"/><circle cx="44" cy="64" r="5.5" fill="#ffd23f"/><path d="M44 53.5 V74.5 M34.5 58.5 L53.5 69.5 M34.5 69.5 L53.5 58.5" stroke="#8f99a6" stroke-width="2.4"/></g>
+<g class="wheel"><circle cx="130" cy="64" r="15" fill="#191d26"/><circle cx="130" cy="64" r="12.5" fill="#2b3140"/><circle cx="130" cy="64" r="5.5" fill="#ffd23f"/><path d="M130 53.5 V74.5 M120.5 58.5 L139.5 69.5 M120.5 69.5 L139.5 58.5" stroke="#8f99a6" stroke-width="2.4"/></g>
+</svg><div class="glow gs"></div><div class="flame"></div><div class="beam"></div>`;}
+function kompCarSVG(){return `<svg viewBox="0 0 170 92">
+<ellipse cx="86" cy="84" rx="74" ry="5" fill="rgba(0,0,0,.45)"/>
+<line x1="52" y1="16" x2="52" y2="5" stroke="#8aa2c2" stroke-width="2.5"/><circle class="blink" cx="52" cy="4" r="3.2" fill="#ff4fd8"/>
+<path d="M12 58 Q14 40 42 31 Q72 12 112 18 Q146 24 158 44 Q166 50 165 58 Q164 66 151 66 L22 66 Q11 64 12 58 Z" fill="#2ee6d6" stroke="#0d7f92" stroke-width="2.5"/>
+<path d="M14 58 L164 58 Q164 66 151 66 L22 66 Q12 64 14 58 Z" fill="#17b8ab"/>
+<path d="M64 30 Q84 14 112 20 Q128 24 134 34 L134 40 L60 40 Q60 34 64 30 Z" fill="#0f2430" stroke="#0d7f92" stroke-width="2"/>
+<rect x="86" y="24" width="17" height="13" rx="3" fill="#5c6f8a"/><rect x="89" y="28" width="4" height="4.5" rx="1.5" fill="#7ef9ff"/><rect x="96" y="28" width="4" height="4.5" rx="1.5" fill="#7ef9ff"/>
+<path d="M20 52 L156 52" stroke="#aefff6" stroke-width="4" opacity=".95"/>
+<rect x="95" y="44" width="30" height="15" rx="4" fill="#0f2430" stroke="#aefff6" stroke-width="2"/>
+<text x="110" y="55.5" text-anchor="middle" font-size="10" font-family="Bungee" fill="#7ef9ff">CPU</text>
+<rect x="157" y="47" width="8" height="7" rx="2" fill="#c2fff9" stroke="#0d7f92"/>
+<rect x="11" y="47" width="5" height="8" rx="2" fill="#ff6bde"/>
+<g class="wheel"><circle cx="44" cy="64" r="15" fill="#191d26"/><circle cx="44" cy="64" r="12.5" fill="#2b3140"/><circle cx="44" cy="64" r="5.5" fill="#7ef9ff"/><path d="M44 53.5 V74.5 M34.5 58.5 L53.5 69.5 M34.5 69.5 L53.5 58.5" stroke="#8f99a6" stroke-width="2.4"/></g>
+<g class="wheel"><circle cx="132" cy="64" r="15" fill="#191d26"/><circle cx="132" cy="64" r="12.5" fill="#2b3140"/><circle cx="132" cy="64" r="5.5" fill="#7ef9ff"/><path d="M132 53.5 V74.5 M122.5 58.5 L141.5 69.5 M122.5 69.5 L141.5 58.5" stroke="#8f99a6" stroke-width="2.4"/></g>
+</svg><div class="glow gk"></div><div class="flame fk"></div><div class="beam"></div>`;}
+
+/* ============ DEKORASI ============ */
+(function(){
+  let st="";for(let i=0;i<46;i++)st+=`<i style="left:${Math.random()*100}%;top:${Math.random()*55}%;animation-delay:${Math.random()*2.6}s;opacity:${.3+Math.random()*.7}"></i>`;
+  $("#stars").innerHTML=st;
+  let c="";for(let i=0;i<30;i++){
+    const h=26+Math.random()*92,w=22+Math.random()*46,lit=Math.random()<.55?".85":".12";
+    c+=`<div class="bld" style="height:${h}px;width:${w}px;--lit:${lit}"></div>`;
+  }
+  $("#city").innerHTML=c;
+  $("#carS").innerHTML=siswaCarSVG();
+  $("#carK").innerHTML=kompCarSVG();
+})();
+
+/* ============ SUARA ============ */
+let AC=null,muted=false;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur=.12,type="square",g=.15,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);
+}
+const SFX={
+  tick(n){tone(n<=2?1500:1050,.055,"square",n<=2?.16:.09);},
+  correct(){tone(660,.08,"triangle",.2);tone(880,.1,"triangle",.2,0,.07);tone(1174,.15,"triangle",.2,0,.14);
+    tone(110,.55,"sawtooth",.14,520,.12);},
+  wrong(){tone(180,.32,"square",.2,105);},
+  komp(){tone(880,.09,"square",.16);tone(660,.09,"square",.16,0,.1);tone(1100,.13,"square",.16,0,.2);
+    tone(95,.55,"sawtooth",.13,430,.2);},
+  go(){tone(80,.7,"sawtooth",.2,430);},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,.17,"triangle",.2,0,i*.13));tone(1319,.45,"triangle",.18,0,.6);},
+  lose(){[392,330,262,196].forEach((f,i)=>tone(f,.22,"sawtooth",.1,0,i*.16));},
+  draw(){tone(440,.2,"triangle",.14);tone(440,.25,"triangle",.14,0,.3);}
+};
+$("#muteBtn").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ============ STATE & LINTASAN ============ */
+const TOTAL=10,CLIMIT=6,START_PAD=16,CAR_W=120,FIN_PAD=36,ADV_MS=3400;
+let deck=[],qi=0,sPos=0,kPos=0,phase="intro",seq=0;
+let roundStart=0,lastTick=99,pausedAt=null,answerTimes=[];
+let STEP=50;
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildDeck(){
+  return shuffle(QUESTIONS).map(r=>{
+    const items=shuffle([{t:r.c,ok:true},...r.w.map(t=>({t,ok:false}))]);
+    return {q:r.q,opts:items.map(i=>i.t),ci:items.findIndex(i=>i.ok),why:r.why};
+  });
+}
+function layout(){
+  const roadW=$("#road").clientWidth;
+  STEP=Math.max(24,(roadW-START_PAD-FIN_PAD-CAR_W)/TOTAL);
+  const startX=START_PAD+CAR_W+4,finX=START_PAD+STEP*TOTAL+CAR_W+4;
+  $("#startLine").style.left=startX+"px";
+  $("#finishLine").style.left=finX+"px";
+  const ticks=$("#ticks");ticks.innerHTML="";
+  for(let i=1;i<TOTAL;i++){
+    const x=START_PAD+i*STEP+CAR_W;
+    ticks.innerHTML+=`<i style="left:${x}px"></i><span style="left:${x-6}px">${i}</span>`;
+  }
+  applyPos();
+}
+window.addEventListener("resize",layout);
+function applyPos(){
+  $("#carS").style.left=(START_PAD+sPos*STEP)+"px";
+  $("#carK").style.left=(START_PAD+kPos*STEP)+"px";
+  $("#posS").textContent=sPos;$("#posK").textContent=kPos;
+}
+function puff(car,n){for(let i=0;i<n;i++)setTimeout(()=>{
+  const p=document.createElement("span");p.className="puff";
+  p.style.bottom=(8+Math.random()*12)+"px";car.appendChild(p);setTimeout(()=>p.remove(),800);},i*100);}
+function sline(car){
+  const y=parseInt(getComputedStyle(car).top)+20+Math.random()*26;
+  for(let i=0;i<3;i++){
+    const s=document.createElement("span");s.className="sline";
+    s.style.top=(y+i*7)+"px";s.style.left=(parseInt(car.style.left||16)-30-i*14)+"px";
+    s.style.width=(34+Math.random()*30)+"px";
+    $("#road").appendChild(s);setTimeout(()=>s.remove(),520);
+  }
+}
+function moveCar(el,pos){
+  el.classList.add("moving");el.style.left=(START_PAD+pos*STEP)+"px";
+  puff(el,4);sline(el);
+  setTimeout(()=>el.classList.remove("moving"),950);
+}
+function stamp(txt,cls){const s=$("#stamp");s.textContent=txt;s.className="";void s.offsetWidth;s.className="show "+cls;}
+function updateTimerUI(rem){
+  $("#tNum").textContent=Math.ceil(rem);
+  $("#tFill").style.width=(rem/CLIMIT*100)+"%";
+  $("#timerHud").classList.toggle("low",rem<=2&&rem>0);
+}
+
+/* ============ ALUR GAME ============ */
+function startGame(){
+  ac();if(AC&&AC.state==="suspended")AC.resume();
+  seq++;deck=buildDeck();qi=0;sPos=0;kPos=0;answerTimes=[];phase="count";
+  $("#intro").classList.add("hidden");$("#result").classList.add("hidden");
+  $("#fb").classList.remove("show");$("#timerHud").classList.remove("dim");
+  layout();applyPos();goSequence(()=>{showQuestion();});
+}
+function goSequence(done){
+  const ov=$("#goOv"),t=$("#goText");ov.classList.add("show");
+  const steps=["3","2","1","GO!"];
+  steps.forEach((s,i)=>setTimeout(()=>{
+    t.textContent=s;t.classList.remove("zoom");void t.offsetWidth;t.classList.add("zoom");
+    tone(s==="GO!"?880:300,.18,"square",.2);
+    if(s==="GO!")SFX.go();
+  },i*640));
+  setTimeout(()=>{ov.classList.remove("show");done();},4*640+280);
+}
+function showQuestion(){
+  phase="question";
+  const d=deck[qi];
+  $("#chipSoal").textContent=`SOAL ${qi+1}/${TOTAL}`;
+  $("#qText").textContent=d.q;
+  const box=$("#opts");box.innerHTML="";box.classList.remove("locked");
+  d.opts.forEach((t,i)=>{
+    const b=document.createElement("button");b.className="opt";
+    b.innerHTML=`<span class="key k${"ABCD"[i]}">${"ABCD"[i]}</span><span>${t}</span>`;
+    b.addEventListener("click",()=>choose(i));box.appendChild(b);
+  });
+  $("#fb").classList.remove("show");
+  $("#tLabel").innerHTML="KOMPUTER<br>MENJAWAB DALAM";
+  $("#timerHud").classList.remove("dim");
+  roundStart=performance.now();lastTick=99;updateTimerUI(CLIMIT);
+}
+function markOpts(chosen,ci){
+  $("#opts").classList.add("locked");
+  $$("#opts .opt").forEach((b,i)=>{
+    if(i===ci)b.classList.add("correct");
+    else if(i===chosen)b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+}
+function choose(i){
+  if(phase!=="question")return;
+  const el=(performance.now()-roundStart)/1000;
+  const d=deck[qi],isRight=(i===d.ci);
+  markOpts(i,d.ci);
+  const mySeq=seq;
+  if(isRight){
+    phase="reveal";
+    answerTimes.push(el);
+    sPos++;moveCar($("#carS"),sPos);
+    SFX.correct();stamp("BENAR! SISWA MAJU ⏩","good");
+    showFB("good","✅ BENAR! Mobil Siswa maju 1 langkah.",d.why);
+    scheduleAdvance(mySeq);
+  }else{
+    phase="waiting"; // siswa tetap di tempat; komputer tetap jalan di detik ke-6
+    SFX.wrong();stamp("TETAP DI TEMPAT! ⛔","bad");
+    $("#tLabel").innerHTML="KOMPUTER MENGAMBIL<br>LANGKAH DALAM";
+    showFB("bad","❌ SALAH! Siswa tetap di tempat — komputer bersiap menjawab…",d.why);
+  }
+  applyPos();
+}
+function computerAnswers(studentWrong){
+  if(phase!=="question"&&phase!=="waiting")return;
+  phase="reveal";
+  updateTimerUI(0);$("#timerHud").classList.add("dim");
+  kPos++;moveCar($("#carK"),kPos);applyPos();
+  SFX.komp();
+  const d=deck[qi];
+  if(!studentWrong)markOpts(-1,d.ci);
+  stamp(studentWrong?"KOMPUTER MENYALIP! 🤖":"WAKTU HABIS! KOMPUTER +1 🤖","kom");
+  const head=studentWrong?"🤖 BIP! Komputer menjawab benar di detik ke-6 dan melaju!"
+                          :"⏰ Waktu habis! Komputer menjawab benar dan melaju!";
+  showFB("kom",head,d.why);
+  scheduleAdvance(seq);
+}
+function showFB(cls,verdict,why){
+  const v=$("#fbVerdict");v.className=cls;v.textContent=verdict;
+  $("#fbWhy").textContent="💡 "+why;
+  const fb=$("#fb");fb.classList.remove("show");void fb.offsetWidth;fb.classList.add("show");
+  const bar=$("#advBar");bar.style.transition="none";bar.style.width="100%";
+  requestAnimationFrame(()=>{bar.style.transition=`width ${ADV_MS}ms linear`;bar.style.width="0%";});
+}
+function scheduleAdvance(mySeq){setTimeout(()=>{if(mySeq===seq)advance();},ADV_MS);}
+function advance(){
+  if(phase!=="reveal")return;
+  seq++; // batalkan auto-advance lama
+  if(qi>=TOTAL-1){endGame();return;}
+  qi++;showQuestion();
+}
+function endGame(){
+  phase="over";
+  const E=$("#resEmoji"),T=$("#resTitle"),M=$("#resMsg");
+  if(sPos>kPos){
+    E.textContent="🏆🏎️";T.textContent="TIM SISWA MENANG!";T.style.color="var(--neonG)";
+    M.textContent="Kalian lebih cepat dari komputer! Checkered flag untuk Tim Siswa!";
+    SFX.win();setTimeout(confettiBurst,300);
+    if(sPos===TOTAL)M.textContent="SEMPURNA! 10/10 benar — komputer tidak pernah bergerak! 👑";
+  }else if(kPos>sPos){
+    E.textContent="🤖🏁";T.textContent="TIM KOMPUTER MENANG";T.style.color="var(--komp)";
+    M.textContent="Mesin menang kali ini. Jawab lebih cepat dari detik ke-6 dan tantang ulang!";
+    SFX.lose();
+  }else{
+    E.textContent="🤝";T.textContent="PHOTO FINISH — SERI!";T.style.color="var(--neonY)";
+    M.textContent="Kedua mobil finis berdampingan! Balapan ulang untuk menentukan pemenang!";
+    SFX.draw();
+  }
+  $("#stS").textContent=sPos;$("#stK").textContent=kPos;
+  if(answerTimes.length){
+    $("#stFast").textContent=Math.min(...answerTimes).toFixed(1)+"s";
+    $("#stAvg").textContent=(answerTimes.reduce((a,b)=>a+b,0)/answerTimes.length).toFixed(1)+"s";
+  }else{$("#stFast").textContent="–";$("#stAvg").textContent="–";}
+  $("#resRank").textContent="GELAR: "+(sPos===10?"SULTAN DRAG 👑":sPos>=8?"PRO DRIVER 🏆":sPos>=6?"PEMBALAP JALANAN 🏎️":sPos>=4?"ROOKIE BERBAKAT 🚗":"NEED FOR PRACTICE 🔧");
+  setTimeout(()=>$("#result").classList.remove("hidden"),900);
+}
+
+/* ============ LOOP TIMER ============ */
+function loop(t){
+  requestAnimationFrame(loop);
+  if(phase==="question"||phase==="waiting"){
+    const rem=Math.max(0,CLIMIT-(t-roundStart)/1000);
+    updateTimerUI(rem);
+    const ci=Math.ceil(rem);
+    if(ci!==lastTick&&ci>=1&&ci<=5){lastTick=ci;SFX.tick(ci);}
+    if(rem<=0)computerAnswers(phase==="waiting");
+  }
+}
+requestAnimationFrame(loop);
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){if(phase==="question"||phase==="waiting")pausedAt=performance.now();}
+  else{if(pausedAt&& (phase==="question"||phase==="waiting")){roundStart+=performance.now()-pausedAt;}pausedAt=null;}
+});
+
+/* ============ KONFETI ============ */
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],confRun=false;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCv();window.addEventListener("resize",sizeCv);
+function confettiBurst(){
+  const cols=["#ff4757","#ffd23f","#3ee06b","#35e0ff","#ff4fd8","#ffffff"];
+  for(let i=0;i<170;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,
+    vx:(Math.random()-.5)*2.4,vy:2+Math.random()*3.2,s:6+Math.random()*7,r:Math.random()*6.3,
+    vr:(Math.random()-.5)*.25,c:cols[i%cols.length]});
+  if(!confRun){confRun=true;requestAnimationFrame(confLoop);}
+}
+function confLoop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.y<cv.height+30);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();});
+  if(parts.length)requestAnimationFrame(confLoop);
+  else{confRun=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* ============ INPUT ============ */
+document.addEventListener("keydown",e=>{
+  if(!$("#intro").classList.contains("hidden")){if(e.key==="Enter")startGame();return;}
+  if(!$("#result").classList.contains("hidden")){if(e.key==="Enter")startGame();return;}
+  if(e.key==="Enter"&&phase==="reveal"){advance();return;}
+  if(phase==="question"){
+    const map={a:0,b:1,c:2,d:3,"1":0,"2":1,"3":2,"4":3};
+    const k=e.key.toLowerCase();
+    if(k in map)choose(map[k]);
+  }
+});
+$("#startBtn").addEventListener("click",startGame);
+$("#againBtn").addEventListener("click",startGame);
+$("#menuBtn").addEventListener("click",()=>{$("#result").classList.add("hidden");$("#intro").classList.remove("hidden");phase="menu";});
+
+layout();applyPos();
+</script>
+</body>
+</html>
