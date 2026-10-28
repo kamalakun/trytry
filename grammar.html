@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentence Builder Workshop — Grammar Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2f3350; --paper:#fffdf8;
+  --mint:#b8f1cc; --peach:#ffd6a5; --sky:#c6e3ff; --rose:#ffd0e0; --lav:#e4d4ff; --butter:#ffe29a;
+  --neon-c:#22d3ee; --neon-p:#ff5fa2; --neon-g:#3ddc84; --neon-y:#ffd23f;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Nunito',sans-serif;color:var(--ink);min-height:100dvh;overflow-x:hidden;
+  background:linear-gradient(140deg,#e7f7ef 0%,#e8ecff 48%,#ffeef2 100%);
+  background-attachment:fixed;user-select:none;
+}
+/* pegboard + ambient */
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(47,51,80,.10) 1.6px,transparent 1.8px);background-size:26px 26px}
+.blob{position:fixed;border-radius:50%;filter:blur(58px);opacity:.45;pointer-events:none;z-index:0;animation:blobF 10s ease-in-out infinite alternate}
+.b1{width:300px;height:300px;background:var(--neon-c);top:-90px;left:-80px}
+.b2{width:280px;height:280px;background:var(--neon-p);bottom:-100px;right:-70px;animation-delay:-4s}
+.b3{width:190px;height:190px;background:var(--neon-y);top:34%;right:12%;opacity:.3;animation-delay:-7s}
+@keyframes blobF{from{transform:translateY(-14px) scale(1)}to{transform:translateY(18px) scale(1.07)}}
+#floaters span{position:fixed;z-index:0;pointer-events:none;opacity:.32;animation:drift ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateY(-12px) rotate(-7deg)}to{transform:translateY(16px) rotate(9deg)}}
+
+/* ---------- HEADER ---------- */
+#app{position:relative;z-index:2;max-width:780px;margin:0 auto;padding:16px 14px 30px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.logo{line-height:1}
+.logo h1{font-family:'Fredoka';font-weight:700;font-size:clamp(24px,5vw,36px);letter-spacing:.5px;
+  text-shadow:2.5px 2.5px 0 rgba(47,51,80,.14)}
+.logo h1 .w{display:inline-block;animation:wig 1.8s ease-in-out infinite alternate}
+@keyframes wig{from{transform:rotate(-9deg)}to{transform:rotate(12deg)}}
+.logo small{font-weight:900;font-size:10px;letter-spacing:3px;color:#6b7194}
+.tape{height:10px;border-radius:6px;margin:6px 0 12px;transform:rotate(-.4deg);
+  background:repeating-linear-gradient(45deg,var(--neon-y) 0 14px,var(--ink) 14px 28px);opacity:.85}
+.hud{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{background:var(--paper);border:2.5px solid var(--ink);border-radius:12px;padding:5px 12px;text-align:center;
+  box-shadow:0 4px 0 rgba(47,51,80,.85)}
+.chip b{font-family:'Fredoka';font-size:17px;display:block;line-height:1.1}
+.chip span{font-size:8.5px;font-weight:900;letter-spacing:1.5px;color:#6b7194}
+.chip.score b{color:#e05252}
+#dots{display:flex;gap:6px;align-items:center}
+#dots i{width:13px;height:13px;border-radius:50%;background:#fff;border:2.5px solid var(--ink);transition:all .3s}
+#dots i.now{background:var(--neon-c);box-shadow:0 0 10px var(--neon-c);animation:pul 1s infinite alternate}
+#dots i.done{background:var(--neon-g);box-shadow:0 0 8px rgba(61,220,132,.7)}
+@keyframes pul{to{transform:scale(1.25)}}
+#muteBtn{width:40px;height:40px;border-radius:12px;border:2.5px solid var(--ink);background:var(--paper);
+  font-size:16px;box-shadow:0 4px 0 rgba(47,51,80,.85);cursor:pointer}
+#muteBtn:active{transform:translateY(3px);box-shadow:none}
+#tenseChip{font-family:'Fredoka';font-weight:600;font-size:12px;letter-spacing:1px;background:var(--lav);
+  border:2.5px solid var(--ink);border-radius:99px;padding:6px 14px;box-shadow:0 4px 0 rgba(47,51,80,.85);margin-bottom:10px;display:inline-block}
+
+/* ---------- BENCH ---------- */
+.bench{background:var(--paper);border:3px solid var(--ink);border-radius:20px;padding:16px 16px 18px;position:relative;
+  box-shadow:0 9px 0 rgba(47,51,80,.85),0 20px 34px rgba(47,51,80,.12)}
+.bench::before,.bench::after{content:"🔩";position:absolute;top:8px;font-size:13px;opacity:.6}
+.bench::before{left:12px}.bench::after{right:12px}
+.zlabel{font-family:'Fredoka';font-weight:600;font-size:13px;letter-spacing:2px;margin:6px 0 8px;display:flex;align-items:center;gap:8px}
+.zlabel .bar{flex:1;height:4px;border-radius:4px;background:repeating-linear-gradient(90deg,#d9dcef 0 10px,transparent 10px 18px)}
+.zone{border:3px dashed #b9bfdd;border-radius:16px;min-height:96px;padding:12px;display:flex;flex-wrap:wrap;
+  gap:10px;align-items:center;align-content:center;transition:border-color .2s,background .2s,box-shadow .2s}
+.zone.dragover{border-color:var(--neon-c);background:#f2fcff;box-shadow:0 0 0 4px rgba(34,211,238,.25),inset 0 0 18px rgba(34,211,238,.15)}
+#sentence{background:#fbfcff}
+#sentence:empty::before{content:"🔩 Tarik & susun kata di sini sampai jadi kalimat utuh…";
+  font-weight:800;font-size:13.5px;color:#9aa0c0;width:100%;text-align:center}
+#bank{background:#fffaf1;margin-top:4px}
+.zone.shake{animation:shakeX .5s}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+.word{font-family:'Fredoka';font-weight:600;font-size:clamp(14px,2.4vw,18px);color:var(--ink);
+  background:var(--c,var(--butter));border:2.5px solid var(--ink);border-radius:13px;padding:9px 16px;cursor:grab;
+  box-shadow:0 5px 0 rgba(47,51,80,.9);transition:transform .14s,box-shadow .14s,background .3s;touch-action:manipulation}
+.word:hover{transform:translateY(-3px) rotate(-1deg);box-shadow:0 8px 0 rgba(47,51,80,.9),0 12px 16px rgba(47,51,80,.15)}
+.word:active{cursor:grabbing;transform:scale(1.05)}
+.word.dragging{opacity:.45;transform:scale(.96)}
+.word.ok{background:#c8f7d5 !important;border-color:#1f8a4c;box-shadow:0 5px 0 #1f8a4c;animation:popM .45s cubic-bezier(.3,1.7,.5,1)}
+.word.bad{background:#ffd9d3 !important;border-color:#d8443a;box-shadow:0 5px 0 #d8443a}
+@keyframes popM{45%{transform:scale(1.14)}}
+.ins{width:5px;height:44px;border-radius:4px;background:var(--neon-c);box-shadow:0 0 12px var(--neon-c);
+  animation:pul .5s infinite alternate;pointer-events:none}
+
+/* ---------- CONTROLS ---------- */
+.controls{display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.controls button{font-family:'Fredoka';font-weight:600;font-size:17px;letter-spacing:.5px;border:3px solid var(--ink);
+  border-radius:14px;padding:11px 26px;cursor:pointer;transition:transform .1s}
+.controls button:hover:not(:disabled){transform:translateY(-2px)}
+.controls button:active:not(:disabled){transform:translateY(3px)}
+#btnCheck{background:linear-gradient(180deg,#7cf7a8,var(--neon-g));box-shadow:0 6px 0 #1f8a4c}
+#btnCheck:disabled{opacity:.45;box-shadow:none;cursor:not-allowed}
+#btnReset{background:#fff;box-shadow:0 6px 0 rgba(47,51,80,.85)}
+#hint{margin-top:12px;text-align:center;font-size:11px;font-weight:800;color:#8a90b0}
+#toast{position:absolute;left:50%;bottom:-18px;transform:translate(-50%,100%);background:var(--ink);color:#fff;
+  font-weight:800;font-size:13px;padding:9px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,calc(100% + 6px))}
+#toast.good{background:#1f8a4c}#toast.bad{background:#d8443a}
+
+/* ---------- GRAMMAR NOTE ---------- */
+#noteCard{margin-top:16px;background:#fffbe6;border:3px solid var(--ink);border-radius:18px;padding:16px 18px;
+  box-shadow:0 8px 0 rgba(47,51,80,.85);display:none;position:relative}
+#noteCard.show{display:block;animation:noteIn .45s cubic-bezier(.3,1.4,.5,1)}
+@keyframes noteIn{from{opacity:0;transform:translateY(22px) scale(.95)}to{opacity:1;transform:none}}
+#noteCard::before{content:"💡 GRAMMAR NOTE";font-family:'Fredoka';font-weight:700;font-size:13px;letter-spacing:2px;
+  background:var(--neon-y);border:2.5px solid var(--ink);border-radius:99px;padding:4px 14px;
+  position:absolute;top:-15px;left:16px;box-shadow:0 3px 0 rgba(47,51,80,.85)}
+#noteTense{display:inline-block;font-size:10px;font-weight:900;letter-spacing:1px;background:var(--lav);
+  border:2px solid var(--ink);border-radius:99px;padding:2px 10px;margin:8px 0 6px}
+#noteText{font-size:14px;font-weight:700;line-height:1.5}
+.arti{font-size:12.5px;margin-top:8px;color:#6b7194;font-weight:700}
+.arti b{color:var(--ink)}
+#btnNext{margin-top:12px;font-family:'Fredoka';font-weight:600;font-size:16px;background:linear-gradient(180deg,#8fe6ff,var(--neon-c));
+  border:3px solid var(--ink);border-radius:13px;padding:10px 22px;cursor:pointer;box-shadow:0 5px 0 #0d7f92;transition:transform .1s}
+#btnNext:hover{transform:translateY(-2px)}
+#btnNext:active{transform:translateY(3px);box-shadow:none}
+
+/* ---------- OVERLAY FINAL ---------- */
+.ov{position:fixed;inset:0;background:rgba(30,32,58,.66);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.ov.hidden{display:none}
+.finalCard{width:min(440px,94%);background:var(--paper);border:4px solid var(--ink);border-radius:22px;text-align:center;
+  padding:26px 24px;box-shadow:0 12px 0 rgba(0,0,0,.3),0 0 50px rgba(255,210,63,.3);animation:noteIn .5s cubic-bezier(.3,1.4,.5,1)}
+.finalCard .tro{font-size:60px;animation:wig 1s ease-in-out infinite alternate;display:inline-block}
+.finalCard h2{font-family:'Fredoka';font-weight:700;font-size:32px;margin:4px 0 2px}
+.fstars{font-size:36px;letter-spacing:8px;margin:4px 0 8px}
+.fstars span{display:inline-block;filter:grayscale(1);opacity:.2;transform:scale(.7)}
+.fstars span.on{filter:none;opacity:1;transform:scale(1);animation:popM .5s cubic-bezier(.3,1.8,.5,1) backwards}
+#rankTxt{font-weight:900;color:#e05252;margin-bottom:4px}
+#finalScore{font-family:'Fredoka';font-size:44px;line-height:1}
+#finalScore small{font-size:13px;letter-spacing:2px;color:#6b7194;font-family:'Nunito';font-weight:900}
+.fbtn{margin-top:16px;font-family:'Fredoka';font-weight:600;font-size:18px;background:linear-gradient(180deg,#ffe98a,var(--neon-y));
+  border:3px solid var(--ink);border-radius:14px;padding:12px 28px;cursor:pointer;box-shadow:0 6px 0 #b8862e;transition:transform .1s}
+.fbtn:hover{transform:translateY(-2px)}
+.fbtn:active{transform:translateY(3px);box-shadow:none}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:80}
+.plus{position:fixed;font-family:'Fredoka';font-weight:700;color:#1f8a4c;font-size:18px;pointer-events:none;z-index:70;
+  animation:plusUp 1s ease forwards;text-shadow:0 2px 0 #fff}
+@keyframes plusUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-42px)}}
+@media (max-width:560px){
+  .hud{margin-left:0}
+  .controls button{flex:1}
+  #toast{white-space:normal;text-align:center;max-width:88%}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+<div id="floaters"></div>
+<canvas id="confetti"></canvas>
+
+<main id="app">
+  <header>
+    <div class="logo">
+      <h1><span class="w">🔧</span> Sentence Builder <span style="color:#e05252">Workshop</span></h1>
+      <small>RANGKAI KATA • JADI KALIMAT • GRAMMAR KUAT</small>
+    </div>
+    <div class="hud">
+      <div class="chip"><b id="lvlTxt">1/5</b><span>SOAL</span></div>
+      <div class="chip score"><b id="scoreTxt">0</b><span>SKOR</span></div>
+      <div class="chip"><div id="dots" style="height:100%;display:flex;align-items:center"></div><span>PROGRES</span></div>
+      <button id="muteBtn" title="Suara">🔊</button>
+    </div>
+  </header>
+  <div class="tape"></div>
+
+  <span id="tenseChip">SIMPLE PAST TENSE</span>
+
+  <section class="bench">
+    <div class="zlabel">📝 KALIMAT UTUH <span class="bar"></span></div>
+    <div class="zone" id="sentence"></div>
+
+    <div class="zlabel">🧩 KATA ACAK <span class="bar"></span></div>
+    <div class="zone" id="bank"></div>
+
+    <div class="controls">
+      <button id="btnReset">↺ Ulangi</button>
+      <button id="btnCheck" disabled>✔ Check Answer</button>
+    </div>
+    <div id="hint">💡 Tarik & lepas kata, atau cukup KLIK kata untuk memindahkannya.</div>
+    <div id="toast"></div>
+  </section>
+
+  <div id="noteCard">
+    <span id="noteTense"></span>
+    <p id="noteText"></p>
+    <p class="arti">🇮🇩 Arti: <b id="noteArti"></b></p>
+    <button id="btnNext">Lanjut → Soal Berikutnya</button>
+  </div>
+</main>
+
+<div class="ov hidden" id="finalOv">
+  <div class="finalCard">
+    <span class="tro">🏆</span>
+    <h2>WORKSHOP SELESAI!</h2>
+    <div class="fstars" id="fstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div id="finalScore">0<small> POIN</small></div>
+    <p id="rankTxt" style="margin-top:6px"></p>
+    <button class="fbtn" id="btnAgain">🔁 Main Lagi</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+
+/* ============ SOAL (edit di sini) ============ */
+const QUESTIONS=[
+ {tokens:["Yesterday","she","visited","the","museum"],
+  accepted:["Yesterday she visited the museum","She visited the museum yesterday"],
+  tense:"SIMPLE PAST TENSE",
+  note:"Gunakan Verb 2 (visited) untuk kejadian yang sudah selesai di masa lampau. Keterangan waktu seperti 'yesterday' boleh di awal atau di akhir kalimat.",
+  arti:"Kemarin dia mengunjungi museum."},
+ {tokens:["My father","drinks","coffee","every morning"],
+  accepted:["My father drinks coffee every morning"],
+  tense:"SIMPLE PRESENT TENSE",
+  note:"Kebiasaan (every morning) memakai Simple Present. Subjek orang ketiga tunggal (he/she/my father) → verb + s/es: drink → drinks.",
+  arti:"Ayahku minum kopi setiap pagi."},
+ {tokens:["They","do not","like","spicy food"],
+  accepted:["They do not like spicy food"],
+  tense:"SIMPLE PRESENT TENSE — NEGATIVE",
+  note:"Kalimat negatif Simple Present: Subject + do/does + not + Verb 1. Subjek 'they' memakai 'do not', dan kata kerja kembali ke bentuk dasar (like).",
+  arti:"Mereka tidak suka makanan pedas."},
+ {tokens:["We","played","football","last week"],
+  accepted:["We played football last week","Last week we played football"],
+  tense:"SIMPLE PAST TENSE",
+  note:"Regular verb: play → played (+ed). Karena kejadian selesai di masa lampau (last week), pakailah Simple Past Tense.",
+  arti:"Kami bermain sepak bola minggu lalu."},
+ {tokens:["She","studies","English","every Tuesday"],
+  accepted:["She studies English every Tuesday"],
+  tense:"SIMPLE PRESENT TENSE",
+  note:"Subjek 'she' → study berubah menjadi studies (akhiran -y menjadi -ies). Dipakai Simple Present karena rutinitas (every Tuesday).",
+  arti:"Dia belajar bahasa Inggris setiap hari Selasa."}
+];
+const COLORS=["#ffe29a","#b8f1cc","#c6e3ff","#ffd0e0","#e4d4ff","#ffd6a5"];
+
+/* ============ STATE ============ */
+let qi=0, score=0, attempts=0, locked=false, muted=false;
+
+/* ============ AUDIO ============ */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur=.12,type="sine",g=.15,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);
+}
+const SFX={
+  pick(){tone(660,.06,"triangle",.12,880);},
+  drop(){tone(520,.07,"triangle",.12,700);},
+  good(){[523,659,784,1047].forEach((f,i)=>tone(f,.14,"triangle",.18,0,i*.09));},
+  bad(){tone(200,.28,"sawtooth",.12,130);},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.18,"triangle",.2,0,i*.13));tone(1568,.5,"triangle",.16,0,.7);}
+};
+$("#muteBtn").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ============ UTIL ============ */
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function toast(msg,cls){const t=$("#toast");t.textContent=msg;t.className="show "+(cls||"");
+  clearTimeout(t._h);t._h=setTimeout(()=>t.className="",1900);}
+function plusScore(n){
+  const r=$(".chip.score").getBoundingClientRect();
+  const p=document.createElement("span");p.className="plus";p.textContent="+"+n;
+  p.style.left=(r.left+r.width/2-14)+"px";p.style.top=(r.top-6)+"px";
+  document.body.appendChild(p);setTimeout(()=>p.remove(),1000);
+}
+
+/* ============ RENDER SOAL ============ */
+function renderDots(){
+  const d=$("#dots");d.innerHTML="";
+  QUESTIONS.forEach((_,i)=>{
+    const dot=document.createElement("i");
+    if(i<qi)dot.className="done";else if(i===qi)dot.className="now";
+    d.appendChild(dot);
+  });
+}
+function loadQuestion(){
+  locked=false;attempts=0;
+  const q=QUESTIONS[qi];
+  $("#lvlTxt").textContent=(qi+1)+"/"+QUESTIONS.length;
+  $("#tenseChip").textContent="🛠️ "+q.tense;
+  $("#noteCard").classList.remove("show");
+  renderDots();
+  const sent=$("#sentence"),bank=$("#bank");
+  sent.innerHTML="";bank.innerHTML="";
+  let order=shuffle(q.tokens.map((t,i)=>({t,i})));
+  if(order.map(o=>o.t).join(" ")===q.accepted[0])order=order.reverse();
+  order.forEach((o,k)=>{
+    const b=makeWord(o.t,o.i,k);
+    bank.appendChild(b);
+  });
+  updateCheck();
+}
+function makeWord(text,idx,orderIdx){
+  const b=document.createElement("button");
+  b.className="word";b.textContent=text;
+  b.dataset.uid="w"+idx;
+  b.style.setProperty("--c",COLORS[orderIdx%COLORS.length]);
+  b.draggable=true;
+  b.addEventListener("dragstart",e=>{
+    e.dataTransfer.setData("text/plain",b.dataset.uid);
+    e.dataTransfer.effectAllowed="move";
+    b.classList.add("dragging");ac();SFX.pick();
+  });
+  b.addEventListener("dragend",()=>{b.classList.remove("dragging");removeIns();});
+  b.addEventListener("click",()=>{
+    if(locked)return;ac();
+    if(b.parentElement===$("#bank")){$("#sentence").appendChild(b);SFX.drop();}
+    else{$("#bank").appendChild(b);SFX.pick();}
+    removeIns();updateCheck();
+  });
+  return b;
+}
+
+/* ============ DRAG & DROP ============ */
+const ins=document.createElement("i");ins.className="ins";
+function removeIns(){ins.remove();}
+function getDragIndex(container,x,y){
+  const words=[...container.querySelectorAll(".word:not(.dragging)")];
+  for(let i=0;i<words.length;i++){
+    const r=words[i].getBoundingClientRect();
+    if(y<r.bottom&&(x<r.left+r.width/2))return i;
+  }
+  return words.length;
+}
+function zoneDnD(container){
+  container.addEventListener("dragover",e=>{
+    if(locked)return;e.preventDefault();e.dataTransfer.dropEffect="move";
+    container.classList.add("dragover");
+    const idx=getDragIndex(container,e.clientX,e.clientY);
+    const ref=container.querySelectorAll(".word:not(.dragging)")[idx];
+    ref?container.insertBefore(ins,ref):container.appendChild(ins);
+  });
+  container.addEventListener("dragleave",e=>{
+    if(!container.contains(e.relatedTarget)){container.classList.remove("dragover");removeIns();}
+  });
+  container.addEventListener("drop",e=>{
+    e.preventDefault();if(locked)return;
+    const uid=e.dataTransfer.getData("text/plain");
+    const b=document.querySelector(`.word[data-uid="${uid}"]`);
+    if(!b)return;
+    const idx=getDragIndex(container,e.clientX,e.clientY);
+    const ref=container.querySelectorAll(".word:not(.dragging)")[idx];
+    ref?container.insertBefore(b,ref):container.appendChild(b);
+    container.classList.remove("dragover");removeIns();SFX.drop();updateCheck();
+  });
+}
+zoneDnD($("#sentence"));zoneDnD($("#bank"));
+
+function updateCheck(){
+  $("#btnCheck").disabled=$("#sentence").querySelectorAll(".word").length!==QUESTIONS[qi].tokens.length;
+}
+
+/* ============ CEK JAWABAN ============ */
+$("#btnCheck").addEventListener("click",()=>{
+  if(locked)return;
+  ac();
+  const q=QUESTIONS[qi];
+  const answer=[...$("#sentence").querySelectorAll(".word")].map(b=>b.textContent).join(" ");
+  if(q.accepted.includes(answer)){
+    locked=true;SFX.good();
+    const gained=20+(attempts===0?5:0);
+    score+=gained;$("#scoreTxt").textContent=score;plusScore(gained);
+    [...$("#sentence").querySelectorAll(".word")].forEach((b,i)=>setTimeout(()=>b.classList.add("ok"),i*130));
+    confettiBurst();
+    setTimeout(()=>{
+      $("#noteTense").textContent=q.tense;
+      $("#noteText").textContent=q.note;
+      $("#noteArti").textContent=q.arti;
+      $("#btnNext").textContent=(qi===QUESTIONS.length-1)?"Lihat Hasil 🏁":"Lanjut → Soal Berikutnya";
+      $("#noteCard").classList.add("show");
+      $("#noteCard").scrollIntoView({behavior:"smooth",block:"nearest"});
+    },900);
+    renderDotsDone();
+  }else{
+    attempts++;SFX.bad();
+    const s=$("#sentence");s.classList.add("shake");
+    s.querySelectorAll(".word").forEach(b=>b.classList.add("bad"));
+    setTimeout(()=>{s.classList.remove("shake");s.querySelectorAll(".word").forEach(b=>b.classList.remove("bad"));},700);
+    toast(attempts===1?"❌ Urutan belum tepat — coba lagi! 💪":"❌ Hampir! PerhatikanGrammar-nya 🤔","bad");
+  }
+});
+function renderDotsDone(){
+  const dots=$("#dots").children;
+  if(dots[qi])dots[qi].className="done";
+}
+$("#btnReset").addEventListener("click",()=>{
+  if(locked)return;ac();SFX.pick();
+  const bank=$("#bank");
+  $("#sentence").querySelectorAll(".word").forEach(b=>bank.appendChild(b));
+  updateCheck();
+});
+
+/* ============ ALUR LEVEL ============ */
+$("#btnNext").addEventListener("click",()=>{
+  ac();SFX.pick();
+  qi++;
+  if(qi>=QUESTIONS.length)showFinal();
+  else loadQuestion();
+});
+function showFinal(){
+  SFX.win();confettiBurst();setTimeout(confettiBurst,500);
+  $("#finalScore").innerHTML=score+"<small> POIN</small>";
+  const stars=score>=120?3:score>=90?2:1;
+  const fs=$("#fstars").children;
+  for(let i=0;i<3;i++){fs[i].classList.toggle("on",i<stars);fs[i].style.animationDelay=(0.2+i*0.28)+"s";}
+  $("#rankTxt").textContent="GELAR: "+(stars===3?"👑 MASTER OF GRAMMAR":stars===2?"🛠️ AHLI SUSUN KALIMAT":"💪 MAGANG YANG SEMANGAT");
+  $("#finalOv").classList.remove("hidden");
+}
+$("#btnAgain").addEventListener("click",()=>{
+  $("#finalOv").classList.add("hidden");
+  qi=0;score=0;$("#scoreTxt").textContent=0;
+  loadQuestion();
+});
+
+/* ============ DEKORASI & KONFETI ============ */
+(function(){
+  const icons=["🔧","✏️","📚","⚙️","🧩","🛠️","📝","💡","🔤","✨"];
+  let h="";for(let i=0;i<11;i++)
+    h+=`<span style="left:${Math.random()*96}vw;top:${Math.random()*92}vh;font-size:${16+Math.random()*22}px;animation-duration:${3+Math.random()*4}s;animation-delay:-${Math.random()*4}s">${icons[i%icons.length]}</span>`;
+  $("#floaters").innerHTML=h;
+})();
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],run=false;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCv();window.addEventListener("resize",sizeCv);
+function confettiBurst(){
+  const cols=["#22d3ee","#ff5fa2","#ffd23f","#3ddc84","#e4d4ff","#ffffff","#ffd6a5"];
+  for(let i=0;i<160;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.45,
+    vx:(Math.random()-.5)*2.6,vy:2+Math.random()*3.4,s:6+Math.random()*7,r:Math.random()*6.3,
+    vr:(Math.random()-.5)*.26,c:cols[i%cols.length]});
+  if(!run){run=true;requestAnimationFrame(loop);}
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.y<cv.height+30);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();});
+  if(parts.length)requestAnimationFrame(loop);
+  else{run=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+loadQuestion();
+</script>
+</body>
+</html>
