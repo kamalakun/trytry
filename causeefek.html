@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cause & Effect Linker — Conjunctions Fase F</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{orb:['Orbitron','sans-serif'],grot:['"Space Grotesk"','sans-serif']}}}};
+</script>
+<style>
+  body{background:
+    radial-gradient(700px 340px at 8% -10%,rgba(34,211,238,.10),transparent 60%),
+    radial-gradient(700px 360px at 100% 110%,rgba(255,61,242,.09),transparent 60%),
+    repeating-linear-gradient(0deg,rgba(120,190,255,.03) 0 1px,transparent 1px 36px),
+    repeating-linear-gradient(90deg,rgba(120,190,255,.03) 0 1px,transparent 1px 36px),#060a17;}
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+    background:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px);}
+  .star{position:fixed;width:2.5px;height:2.5px;border-radius:99px;background:#fff;opacity:.5;animation:twk 3s ease-in-out infinite;pointer-events:none}
+  @keyframes twk{0%,100%{opacity:.12}50%{opacity:.8}}
+  @keyframes bobF{from{transform:translateY(-3px)}to{transform:translateY(3px)}}
+  .bob{animation:bobF 3.6s ease-in-out infinite alternate}
+  @keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+  .shake{animation:shakeX .45s}
+  @keyframes errFlash{0%{box-shadow:0 0 0 3px rgba(255,77,94,.9),0 0 30px rgba(255,77,94,.8)}100%{box-shadow:none}}
+  .errflash{animation:errFlash .6s ease-out}
+  @keyframes popUp{0%{opacity:0;transform:translateY(6px) scale(.7)}25%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-44px) scale(1)}}
+  .pop{animation:popUp 1s ease forwards}
+  @keyframes bannerIn{0%{transform:scale(.4);opacity:0}55%{transform:scale(1.1);opacity:1}100%{transform:scale(1)}}
+  .bannerA{animation:bannerIn .55s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes pulseSel{0%,100%{box-shadow:0 0 14px 2px rgba(255,210,63,.55)}50%{box-shadow:0 0 26px 6px rgba(255,210,63,.85)}}
+  .selected{animation:pulseSel 1s infinite}
+  @keyframes popIn{from{transform:translateY(30px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+  .cardIn{animation:popIn .4s cubic-bezier(.3,1.4,.5,1)}
+  @keyframes blinkT{50%{opacity:.3}}
+  .time-low{color:#ff4d5e!important;animation:blinkT .5s steps(2) infinite}
+  .node{transition:transform .15s,box-shadow .2s,border-color .2s}
+  .node:hover:not(.locked){transform:translateY(-3px)}
+  .chipJ{transition:all .14s}
+  .chipJ:hover{transform:translateY(-3px)}
+  ::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:#24466b;border-radius:8px}
+</style>
+</head>
+<body class="min-h-screen text-slate-200 font-grot select-none">
+
+<!-- ================= HEADER / HUD ================= -->
+<header class="max-w-[1180px] mx-auto px-4 pt-4 pb-2 flex items-center gap-3 flex-wrap">
+  <div>
+    <h1 class="font-orb font-extrabold text-lg sm:text-2xl tracking-widest text-white" style="text-shadow:0 0 18px rgba(34,211,238,.6)">
+      ⚡ CAUSE &amp; EFFECT <span class="text-cyan-300">LINKER</span></h1>
+    <p class="text-[10px] sm:text-[11px] tracking-[3px] text-slate-500">CONJUNCTION PROTOCOL // ENGLISH FASE F</p>
+  </div>
+  <div class="ml-auto flex items-center gap-2 flex-wrap">
+    <div class="bg-[#0b1424] border border-[#24466b] rounded-lg px-3 py-1.5 text-center min-w-[84px]">
+      <div id="hudScore" class="font-orb text-amber-300 text-base leading-5">0</div>
+      <div class="text-[9px] tracking-[2px] text-slate-500">SCORE</div></div>
+    <div class="bg-[#0b1424] border border-[#24466b] rounded-lg px-3 py-1.5 text-center min-w-[84px]">
+      <div id="hudLinks" class="font-orb text-lime-300 text-base leading-5">0/15</div>
+      <div class="text-[9px] tracking-[2px] text-slate-500">LINKS</div></div>
+    <div class="bg-[#0b1424] border border-[#24466b] rounded-lg px-3 py-1.5 text-center min-w-[84px]">
+      <div id="hudTime" class="font-orb text-cyan-300 text-base leading-5">00:00</div>
+      <div id="hudTimeLbl" class="text-[9px] tracking-[2px] text-slate-500">TIME</div></div>
+    <button id="gramBtn" class="bg-[#0b1424] border border-[#24466b] hover:border-amber-300 hover:text-amber-300 rounded-lg px-3 py-2.5 text-sm transition-colors">📘 GRAMMAR</button>
+    <button id="muteBtn" class="bg-[#0b1424] border border-[#24466b] hover:border-cyan-300 rounded-lg px-3 py-2.5 text-sm transition-colors">🔊</button>
+    <button id="menuBtn" class="bg-[#0b1424] border border-[#24466b] hover:border-pink-400 hover:text-pink-300 rounded-lg px-3 py-2.5 text-sm transition-colors" title="Ganti mode">🎛 MODE</button>
+  </div>
+</header>
+
+<!-- ================= BOARD ================= -->
+<main class="max-w-[1180px] mx-auto px-4 pb-4">
+  <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+    <div id="guide" class="text-sm text-cyan-200/90 tracking-wide">▶ Pilih pulau CAUSE di sebelah kiri.</div>
+    <div id="sectorChip" class="font-orb text-[10px] tracking-[3px] bg-[#0b1424] border border-[#24466b] rounded-full px-4 py-1.5 text-pink-300">SECTOR 1/4</div>
+  </div>
+
+  <div id="board" class="relative border border-[#1d3557] rounded-2xl bg-[#080f1e]/70 p-4 sm:p-6 overflow-hidden"
+       style="box-shadow:0 0 40px rgba(10,40,80,.5) inset">
+    <svg id="wires" class="absolute inset-0 w-full h-full pointer-events-none" style="z-index:5"></svg>
+    <div class="grid grid-cols-2 gap-8 sm:gap-20 lg:gap-44 relative" style="z-index:4">
+      <div>
+        <div class="text-center font-orb text-[10px] tracking-[4px] text-cyan-300 mb-3">◤ CAUSE ISLANDS ◥</div>
+        <div id="colL" class="space-y-4"></div>
+      </div>
+      <div>
+        <div class="text-center font-orb text-[10px] tracking-[4px] text-pink-300 mb-3">◤ EFFECT ISLANDS ◥</div>
+        <div id="colR" class="space-y-4"></div>
+      </div>
+    </div>
+    <div id="banner" class="hidden absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
+      <span id="bannerTxt" class="font-orb text-amber-300 text-xl sm:text-3xl tracking-[4px] text-center px-4" style="text-shadow:0 0 24px rgba(255,210,63,.7),2px 2px 0 #000"></span>
+    </div>
+  </div>
+
+  <!-- LINK CONSOLE -->
+  <div id="consPanel" class="hidden mt-3 border border-cyan-400/40 rounded-2xl bg-[#0b1424]/90 p-4" style="box-shadow:0 0 26px rgba(34,211,238,.12)">
+    <div class="font-orb text-[10px] tracking-[3px] text-cyan-300 mb-2">🔌 LINK CONSOLE — CHOOSE THE CONNECTOR</div>
+    <div class="flex flex-wrap items-center gap-2 text-sm mb-3">
+      <span class="bg-cyan-950/60 border border-cyan-500/50 text-cyan-100 rounded-lg px-3 py-1.5" id="consCause"></span>
+      <span class="text-amber-300 font-orb text-xs">⟡ ⟡ ⟡</span>
+      <span class="bg-pink-950/60 border border-pink-500/50 text-pink-100 rounded-lg px-3 py-1.5" id="consEffect"></span>
+    </div>
+    <div id="chipRow" class="grid grid-cols-2 md:grid-cols-4 gap-2"></div>
+    <div id="notePanel" class="hidden mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed border"></div>
+  </div>
+  <div id="noteSolo" class="mt-3 rounded-xl px-4 py-3 text-sm leading-relaxed border hidden"></div>
+</main>
+
+<!-- ================= START OVERLAY ================= -->
+<div id="startOv" class="fixed inset-0 z-70 bg-[#04060f]/90 flex items-center justify-center p-4 overflow-auto">
+  <div class="cardIn w-full max-w-xl bg-[#0a1322] border border-cyan-400/60 rounded-2xl p-6 sm:p-8" style="box-shadow:0 0 50px rgba(34,211,238,.25)">
+    <h2 class="font-orb font-extrabold text-2xl sm:text-3xl text-white tracking-wider">⚡ CAUSE &amp; EFFECT <span class="text-cyan-300">LINKER</span></h2>
+    <p class="text-[11px] tracking-[3px] text-slate-500 mt-1 mb-4">GLOBAL WARMING • RENEWABLE ENERGY • AUTOMATION • CYBER SECURITY</p>
+    <ul class="text-sm text-slate-300 space-y-1.5 mb-4 leading-relaxed">
+      <li>🏝️ Hubungkan pulau <b class="text-cyan-300">CAUSE</b> (kiri) dengan pulau <b class="text-pink-300">EFFECT</b> (kanan).</li>
+      <li>🔌 Pilih <b class="text-amber-300">conjunction</b> yang tepat secara tata bahasa (<i>due to, because, leads to, stems from…</i>).</li>
+      <li>✅ Kombinasi benar → jembatan energi menyala, <b class="text-lime-300">+100 poin</b>.</li>
+      <li>📘 Ragu? Buka <b class="text-amber-300">GRAMMAR</b>: perbedaan <i>due to</i> (+noun phrase) vs <i>because</i> (+clause).</li>
+    </ul>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+      <button data-mode="practice" class="modeCard border-2 border-cyan-400 rounded-xl p-3 text-left bg-cyan-950/40 transition-all">
+        <div class="font-orb text-cyan-300 text-sm">🎯 PRACTICE MODE</div>
+        <div class="text-xs text-slate-400 mt-1">Santai • timer maju • salah = −10 poin</div>
+      </button>
+      <button data-mode="attack" class="modeCard border-2 border-[#24466b] rounded-xl p-3 text-left bg-[#0b1424] transition-all">
+        <div class="font-orb text-pink-300 text-sm">⚡ TIME ATTACK</div>
+        <div class="text-xs text-slate-400 mt-1">180 detik • salah = −5 detik • bonus sisa waktu</div>
+      </button>
+    </div>
+    <button id="startBtn" class="w-full font-orb font-extrabold tracking-[3px] bg-lime-400 text-[#06240f] rounded-xl py-3.5 text-base hover:bg-lime-300 active:translate-y-0.5 transition-all" style="box-shadow:0 6px 0 #3f6212">▶ START LINKING</button>
+    <p class="text-center text-[11px] text-slate-500 mt-3">tekan ENTER untuk mulai</p>
+  </div>
+</div>
+
+<!-- ================= GRAMMAR OVERLAY ================= -->
+<div id="gramOv" class="hidden fixed inset-0 z-70 bg-[#04060f]/90 flex items-center justify-center p-4 overflow-auto">
+  <div class="cardIn w-full max-w-xl bg-[#0a1322] border border-amber-300/60 rounded-2xl p-6" style="box-shadow:0 0 50px rgba(255,210,63,.2)">
+    <h2 class="font-orb font-extrabold text-xl text-amber-300 tracking-wider mb-3">📘 CONJUNCTION DATABASE</h2>
+    <div class="space-y-3 text-sm leading-relaxed text-slate-300">
+      <div class="border border-cyan-500/40 rounded-xl p-3 bg-cyan-950/30">
+        <b class="text-cyan-300 font-orb text-xs tracking-widest">EFFECT ← CAUSE</b>
+        <p class="mt-1"><b class="text-amber-300">because</b> + <b>clause (S+V)</b>: <i>"Coastal cities flood <b>because sea levels rise</b>."</i></p>
+        <p><b class="text-amber-300">because of / due to / owing to</b> + <b>noun phrase</b>: <i>"The delay was <b>due to heavy rain</b>."</i> (<i>due to</i> sering mengikuti <i>be/noun</i>.)</p>
+        <p><b class="text-amber-300">stems from / is caused by</b>: efek disebut lebih dulu, lalu penyebabnya.</p>
+      </div>
+      <div class="border border-pink-500/40 rounded-xl p-3 bg-pink-950/30">
+        <b class="text-pink-300 font-orb text-xs tracking-widest">CAUSE → EFFECT</b>
+        <p class="mt-1"><b class="text-amber-300">leads to / results in / triggers</b> + <b>noun phrase</b>: <i>"Deforestation <b>leads to</b> severe flooding."</i></p>
+      </div>
+      <div class="border border-amber-300/40 rounded-xl p-3 bg-amber-950/20">
+        <b class="text-amber-300 font-orb text-xs tracking-widest">💡 PRO TIP</b>
+        <p class="mt-1">Lihat apa yang mengikuti konektor: jika <b>clause (ada subjek + kata kerja)</b> → pakai <b>because</b>; jika <b>noun phrase</b> → pakai <b>because of / due to</b>. Lalu cek arahnya: Cause→Effect atau Effect←Cause.</p>
+      </div>
+    </div>
+    <button id="gramClose" class="mt-4 w-full font-orb tracking-[2px] bg-amber-300 text-[#3a2a00] rounded-xl py-3 hover:bg-amber-200 transition-colors">✕ CLOSE</button>
+  </div>
+</div>
+
+<!-- ================= END OVERLAY ================= -->
+<div id="endOv" class="hidden fixed inset-0 z-70 bg-[#04060f]/90 flex items-center justify-center p-4 overflow-auto">
+  <div class="cardIn w-full max-w-md bg-[#0a1322] border border-lime-400/60 rounded-2xl p-7 text-center" style="box-shadow:0 0 50px rgba(57,255,136,.25)">
+    <div id="endEmoji" class="text-6xl mb-2">🏆</div>
+    <h2 id="endTitle" class="font-orb font-extrabold text-2xl text-lime-300 tracking-wider">GRID FULLY POWERED!</h2>
+    <p id="endSub" class="text-sm text-slate-400 mt-1 mb-4"></p>
+    <div class="grid grid-cols-3 gap-2 mb-4">
+      <div class="bg-[#0b1424] border border-[#24466b] rounded-lg py-2"><div id="stScore" class="font-orb text-amber-300">0</div><div class="text-[9px] tracking-[2px] text-slate-500">SCORE</div></div>
+      <div class="bg-[#0b1424] border border-[#24466b] rounded-lg py-2"><div id="stAcc" class="font-orb text-cyan-300">0%</div><div class="text-[9px] tracking-[2px] text-slate-500">ACCURACY</div></div>
+      <div class="bg-[#0b1424] border border-[#24466b] rounded-lg py-2"><div id="stTime" class="font-orb text-pink-300">0:00</div><div class="text-[9px] tracking-[2px] text-slate-500">TIME</div></div>
+    </div>
+    <div id="endRank" class="font-orb text-sm text-violet-300 tracking-widest mb-5"></div>
+    <div class="flex gap-3">
+      <button id="againBtn" class="flex-1 font-orb tracking-[2px] bg-lime-400 text-[#06240f] rounded-xl py-3 hover:bg-lime-300 transition-colors">🔁 PLAY AGAIN</button>
+      <button id="modeBtn2" class="flex-1 font-orb tracking-[2px] bg-[#0b1424] border border-[#24466b] rounded-xl py-3 hover:border-cyan-400 transition-colors">🎛 MODE</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti" class="fixed inset-0 pointer-events-none z-80"></canvas>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+
+/* ================= DATA ================= */
+const CONJ={
+ leads_to:{l:"leads to",p:"+ NP · Cause → Effect",dir:"CE"},
+ results_in:{l:"results in",p:"+ NP · Cause → Effect",dir:"CE"},
+ triggers:{l:"triggers",p:"+ NP · Cause → Effect",dir:"CE"},
+ because_of:{l:"because of",p:"+ NP · Effect ← Cause",dir:"EC"},
+ due_to:{l:"due to",p:"+ NP · Effect ← Cause",dir:"EC"},
+ because:{l:"because",p:"+ Clause (S+V) · Effect ← Cause",dir:"EC"},
+ stems_from:{l:"stems from",p:"+ NP · Effect ← Cause",dir:"EC"},
+ caused_by:{l:"is caused by",p:"+ NP · Effect ← Cause",dir:"EC"}
+};
+const PAIRS=[
+ {c:"The excessive emission of greenhouse gases",e:"the steady rise of global temperatures",j:"leads_to",n:"'leads to' + noun phrase: CAUSE → EFFECT."},
+ {c:"the instability of the climate system",e:"The increasingly frequent extreme weather",j:"caused_by",n:"'is caused by': EFFECT + is caused by + CAUSE."},
+ {c:"sea levels keep rising every year",e:"Many coastal cities face serious flooding",j:"because",n:"'because' + clause (S+V): EFFECT because CAUSE."},
+ {c:"The rapid melting of polar ice caps",e:"the loss of natural habitats for polar wildlife",j:"results_in",n:"'results in' + noun phrase: CAUSE → EFFECT."},
+ {c:"The widespread installation of rooftop solar panels",e:"a significant reduction in household electricity bills",j:"leads_to",n:"'leads to' + noun phrase: CAUSE → EFFECT."},
+ {c:"the global push for cleaner power sources",e:"The rapid growth of the renewable energy industry",j:"stems_from",n:"'stems from': EFFECT + stems from + CAUSE."},
+ {c:"the new micro-hydro power plants",e:"Many remote villages now enjoy electricity",j:"because_of",n:"'because of' + noun phrase: EFFECT because of CAUSE."},
+ {c:"A government subsidy for green technology",e:"the faster adoption of electric vehicles",j:"results_in",n:"'results in' + noun phrase: CAUSE → EFFECT."},
+ {c:"The adoption of industrial robots",e:"the displacement of many manual jobs",j:"triggers",n:"'triggers' + noun phrase: CAUSE → EFFECT."},
+ {c:"the rapid expansion of smart factories",e:"The rising demand for automation engineers",j:"stems_from",n:"'stems from': EFFECT + stems from + CAUSE."},
+ {c:"automated systems never need rest",e:"Several factories can operate around the clock",j:"because",n:"'because' + clause (S+V): EFFECT because CAUSE."},
+ {c:"The automation of warehouse operations",e:"faster and more accurate order processing",j:"leads_to",n:"'leads to' + noun phrase: CAUSE → EFFECT."},
+ {c:"A single human error in system maintenance",e:"a massive data breach across the network",j:"results_in",n:"'results in' + noun phrase: CAUSE → EFFECT."},
+ {c:"A successful phishing attack",e:"the theft of confidential company data",j:"triggers",n:"'triggers' + noun phrase: CAUSE → EFFECT."},
+ {c:"the rising number of cyber attacks",e:"Many companies now invest heavily in firewalls",j:"due_to",n:"'due to' + noun phrase: EFFECT due to CAUSE."}
+];
+const ROUNDS=[
+ {name:"GLOBAL WARMING",icon:"🌍",ids:[0,1,2,3]},
+ {name:"RENEWABLE ENERGY",icon:"☀️",ids:[4,5,6,7]},
+ {name:"AUTOMATION",icon:"🤖",ids:[8,9,10,11]},
+ {name:"CYBER SECURITY",icon:"🛡️",ids:[12,13,14]}
+];
+
+/* ================= AUDIO ================= */
+let AC=null,muted=false;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur=.12,type="sine",g=.15,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);}
+const SFX={
+ pick(){tone(760,.06,"triangle",.1,980);},
+ place(){tone(520,.07,"triangle",.12,700);},
+ link(){[523,659,784,1047].forEach((f,i)=>tone(f,.15,"triangle",.17,0,i*.08));tone(1568,.3,"sine",.08,0,.34);},
+ err(){tone(180,.28,"sawtooth",.14,120);tone(120,.2,"square",.1,0,.12);},
+ sector(){[392,523,659].forEach((f,i)=>tone(f,.13,"triangle",.15,0,i*.09));},
+ win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,.17,"triangle",.18,0,i*.12));},
+ lose(){[330,262,196,147].forEach((f,i)=>tone(f,.25,"sawtooth",.1,0,i*.18));},
+ tick(){tone(1250,.05,"square",.09);}
+};
+$("#muteBtn").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ================= STATE ================= */
+let phase="menu",mode="practice",score=0,links=0,attempts=0,roundIdx=0,roundDone=0;
+let elapsed=0,timeLeft=180,timerInt=null;
+let selCause=null,selEffect=null,bridges=[],mouse={x:0,y:0,in:false};
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ================= HUD ================= */
+function updHUD(){
+  $("#hudScore").textContent=score;
+  $("#hudLinks").textContent=links+"/15";
+  $("#sectorChip").textContent=`SECTOR ${Math.min(roundIdx+1,4)}/4 • ${["GW","RENEW","AUTO","CYBER"][Math.min(roundIdx,3)]}`;
+}
+function updTime(){
+  const el=$("#hudTime");
+  if(mode==="attack"){el.textContent=fmt(timeLeft);el.classList.toggle("time-low",timeLeft<=15);}
+  else{el.textContent=fmt(elapsed);el.classList.remove("time-low");}
+}
+function setGuide(t){$("#guide").textContent=t;}
+
+/* ================= ROUND BUILD ================= */
+function loadRound(i){
+  roundIdx=i;roundDone=0;
+  const r=ROUNDS[i];
+  $("#colL").innerHTML="";$("#colR").innerHTML="";
+  bridges=[];$("#wires").innerHTML="";
+  const L=shuffle(r.ids),R=shuffle(r.ids);
+  L.forEach((id,k)=>{
+    const d=document.createElement("div");
+    d.className="node bob cursor-pointer rounded-xl border-2 border-cyan-500/60 bg-gradient-to-b from-[#0e2233] to-[#091624] px-3.5 py-3 text-[13px] sm:text-sm leading-snug";
+    d.style.animationDelay=(k*.5)+"s";
+    d.style.boxShadow="0 8px 0 rgba(0,0,0,.35),0 0 16px rgba(34,211,238,.10)";
+    d.dataset.id=id;d.innerHTML=`<span class="font-orb text-[8.5px] tracking-[2px] text-cyan-400 block mb-1">CAUSE #${k+1}</span>${PAIRS[id].c}`;
+    d.addEventListener("click",()=>clickCause(d));
+    $("#colL").appendChild(d);
+  });
+  R.forEach((id,k)=>{
+    const d=document.createElement("div");
+    d.className="node bob cursor-pointer rounded-xl border-2 border-pink-500/60 bg-gradient-to-b from-[#2a1030] to-[#170a1e] px-3.5 py-3 text-[13px] sm:text-sm leading-snug";
+    d.style.animationDelay=(k*.5+.3)+"s";
+    d.style.boxShadow="0 8px 0 rgba(0,0,0,.35),0 0 16px rgba(255,61,242,.10)";
+    d.dataset.id=id;d.innerHTML=`<span class="font-orb text-[8.5px] tracking-[2px] text-pink-400 block mb-1">EFFECT #${k+1}</span>${PAIRS[id].e}`;
+    d.addEventListener("click",()=>clickEffect(d));
+    $("#colR").appendChild(d);
+  });
+  hideConsole();updHUD();
+  banner(`${r.icon} SECTOR ${i+1} — ${r.name}`);
+  setGuide("▶ Pilih pulau CAUSE di sebelah kiri.");
+}
+function banner(txt){
+  const b=$("#banner"),t=$("#bannerTxt");
+  t.textContent=txt;b.classList.remove("hidden");
+  t.classList.remove("bannerA");void t.offsetWidth;t.classList.add("bannerA");
+  SFX.sector();
+  setTimeout(()=>b.classList.add("hidden"),1400);
+}
+
+/* ================= SELECTION & CONSOLE ================= */
+function clickCause(el){
+  if(phase!=="play"||el.classList.contains("locked"))return;
+  ac();SFX.pick();
+  if(selCause===el){el.classList.remove("selected","border-amber-300");selCause=null;hideConsole();setGuide("▶ Pilih pulau CAUSE di sebelah kiri.");return;}
+  selCause&&selCause.classList.remove("selected","border-amber-300");
+  el.classList.add("selected","border-amber-300");selCause=el;
+  if(!selEffect)setGuide("▶ Sekarang pilih pulau EFFECT di kanan.");
+  refreshConsole();
+}
+function clickEffect(el){
+  if(phase!=="play"||el.classList.contains("locked"))return;
+  ac();SFX.pick();
+  if(selEffect===el){el.classList.remove("selected","border-amber-300");selEffect=null;refreshConsole();return;}
+  selEffect&&selEffect.classList.remove("selected","border-amber-300");
+  el.classList.add("selected","border-amber-300");selEffect=el;
+  refreshConsole();
+}
+function refreshConsole(){
+  if(selCause&&selEffect){
+    $("#consCause").textContent=PAIRS[+selCause.dataset.id].c;
+    $("#consEffect").textContent=PAIRS[+selEffect.dataset.id].e;
+    buildChips();
+    $("#consPanel").classList.remove("hidden");
+    setGuide("🔌 Pilih conjunction yang tepat untuk menghubungkan keduanya!");
+  }else if(selCause){$("#consPanel").classList.add("hidden");setGuide("▶ Sekarang pilih pulau EFFECT di kanan.");}
+  else{$("#consPanel").classList.add("hidden");setGuide("▶ Pilih pulau CAUSE di sebelah kiri.");}
+}
+function hideConsole(){$("#consPanel").classList.add("hidden");$("#notePanel").classList.add("hidden");}
+function buildChips(){
+  const cid=PAIRS[+selCause.dataset.id].j;
+  const others=shuffle(Object.keys(CONJ).filter(k=>k!==cid)).slice(0,3);
+  const chips=shuffle([cid,...others]);
+  const row=$("#chipRow");row.innerHTML="";
+  chips.forEach(k=>{
+    const b=document.createElement("button");
+    b.className="chipJ border-2 border-cyan-500/60 bg-[#0b1a2e] hover:border-amber-300 hover:bg-[#13233c] rounded-xl px-3 py-2.5 text-left";
+    b.innerHTML=`<span class="font-orb text-[13px] text-cyan-100 block">${CONJ[k].l}</span><span class="text-[10px] text-slate-400">${CONJ[k].p}</span>`;
+    b.addEventListener("click",()=>evaluate(k,b));
+    row.appendChild(b);
+  });
+}
+
+/* ================= EVALUATE ================= */
+function evaluate(conjId,btn){
+  if(phase!=="play")return;
+  attempts++;
+  const cId=+selCause.dataset.id,eId=+selEffect.dataset.id,pair=PAIRS[cId];
+  if(cId!==eId){ // pasangan salah
+    SFX.err();flashErr(selEffect);$("#board").classList.add("shake");setTimeout(()=>$("#board").classList.remove("shake"),500);
+    if(mode==="practice"){score=Math.max(0,score-10);}else{timeLeft=Math.max(0,timeLeft-5);}
+    selEffect.classList.remove("selected","border-amber-300");selEffect=null;
+    showNote(false,"❌ EFFECT itu tidak cocok dengan CAUSE ini. Cermati makna keduanya, lalu pilih pulau EFFECT yang lain.");
+    refreshConsole();updHUD();updTime();return;
+  }
+  if(conjId!==pair.j){ // konektor salah
+    SFX.err();btn.classList.add("shake","border-red-500");setTimeout(()=>btn.classList.remove("shake"),500);
+    if(mode==="practice"){score=Math.max(0,score-10);}else{timeLeft=Math.max(0,timeLeft-5);}
+    showNote(false,`❌ Pasangan benar, tapi konektornya keliru. Ingat: ${CONJ[pair.j].l} (${CONJ[pair.j].p}) — cek arah & pola frasanya di 📘 GRAMMAR.`);
+    updHUD();updTime();return;
+  }
+  linkPair(cId);
+}
+function flashErr(el){el.classList.add("errflash");setTimeout(()=>el.classList.remove("errflash"),650);}
+function showNote(ok,html){
+  const p=$("#notePanel");p.classList.remove("hidden","border-lime-500/50","bg-lime-950/30","text-lime-100","border-red-500/50","bg-red-950/30","text-red-100");
+  p.classList.add(...(ok?["border-lime-500/50","bg-lime-950/30","text-lime-100"]:["border-red-500/50","bg-red-950/30","text-red-100"]));
+  p.innerHTML=html;
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+
+/* ================= LINK & BRIDGE ================= */
+function linkPair(id){
+  const pair=PAIRS[id],cEl=selCause,eEl=selEffect;
+  cEl.classList.remove("selected","border-amber-300");eEl.classList.remove("selected","border-amber-300");
+  cEl.classList.add("locked","pointer-events-none","border-lime-400","bg-lime-950/30");
+  eEl.classList.add("locked","pointer-events-none","border-lime-400","bg-lime-950/30");
+  addBridge(cEl,eEl);
+  score+=100;links++;roundDone++;
+  popup(eEl,"+100");
+  SFX.link();
+  const dir=CONJ[pair.j].dir;
+  const sent=dir==="CE"?`${cap(pair.c)} ${CONJ[pair.j].l} ${pair.e}.`:`${cap(pair.e)} ${CONJ[pair.j].l} ${pair.c}.`;
+  showNote(true,`✅ <b>LINKED!</b> "${sent}"<br><span class="text-lime-300/80 text-xs">${pair.n}</span>`);
+  selCause=null;selEffect=null;
+  setTimeout(()=>{$("#consPanel").classList.add("hidden");},1800);
+  updHUD();
+  if(roundDone===ROUNDS[roundIdx].ids.length){
+    setTimeout(()=>{
+      if(roundIdx<ROUNDS.length-1)loadRound(roundIdx+1);
+      else winGame();
+    },1600);
+  }
+}
+function addBridge(cEl,eEl){
+  const svg=$("#wires");
+  const glow=document.createElementNS("http://www.w3.org/2000/svg","path");
+  glow.setAttribute("stroke","#7cf7a8");glow.setAttribute("stroke-width","10");
+  glow.setAttribute("fill","none");glow.setAttribute("opacity",".22");glow.setAttribute("stroke-linecap","round");
+  const core=document.createElementNS("http://www.w3.org/2000/svg","path");
+  core.setAttribute("stroke","#c9ffd9");core.setAttribute("stroke-width","2.6");
+  core.setAttribute("fill","none");core.setAttribute("stroke-linecap","round");core.setAttribute("stroke-dasharray","11 7");
+  const s1=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  const s2=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  [s1,s2].forEach(s=>{s.setAttribute("r","3.4");s.setAttribute("fill","#eafff1");});
+  svg.appendChild(glow);svg.appendChild(core);svg.appendChild(s1);svg.appendChild(s2);
+  bridges.push({cEl,eEl,glow,core,s1,s2,flash:1,off:Math.random()});
+}
+function endpoint(el,side){
+  const r=el.getBoundingClientRect(),b=$("#board").getBoundingClientRect();
+  return side==="r"?{x:r.right-b.left,y:r.top-b.top+r.height/2}:{x:r.left-b.left,y:r.top-b.top+r.height/2};
+}
+function bez(p1,p2){
+  const cx=Math.max(46,(p2.x-p1.x)*.45);
+  return `M ${p1.x} ${p1.y} C ${p1.x+cx} ${p1.y}, ${p2.x-cx} ${p2.y}, ${p2.x} ${p2.y}`;
+}
+/* preview line + render loop */
+const pv=document.createElementNS("http://www.w3.org/2000/svg","path");
+pv.setAttribute("stroke","#22d3ee");pv.setAttribute("stroke-width","2");pv.setAttribute("fill","none");
+pv.setAttribute("stroke-dasharray","5 8");pv.setAttribute("opacity",".6");pv.style.display="none";
+$("#wires").appendChild(pv);
+$("#board").addEventListener("pointermove",e=>{
+  const b=$("#board").getBoundingClientRect();
+  mouse.x=e.clientX-b.left;mouse.y=e.clientY-b.top;mouse.in=true;
+});
+$("#board").addEventListener("pointerleave",()=>mouse.in=false);
+let last=performance.now();
+function frame(t){
+  const dt=t-last;last=t;
+  bridges.forEach(br=>{
+    const p1=endpoint(br.cEl,"r"),p2=endpoint(br.eEl,"l");
+    const d=bez(p1,p2);
+    br.glow.setAttribute("d",d);br.core.setAttribute("d",d);
+    br.core.setAttribute("stroke-dashoffset",(-t/28+br.off*40)%18);
+    br.flash=Math.max(0,br.flash-dt*.0012);
+    br.glow.setAttribute("opacity",.22+br.flash*.6);
+    try{
+      const len=br.core.getTotalLength();
+      const a=br.core.getPointAtLength(((t/2600)+br.off)%1*len);
+      const bpt=br.core.getPointAtLength(((t/2600)+br.off+.5)%1*len);
+      br.s1.setAttribute("cx",a.x);br.s1.setAttribute("cy",a.y);
+      br.s2.setAttribute("cx",bpt.x);br.s2.setAttribute("cy",bpt.y);
+    }catch(e){}
+  });
+  if(selCause&&!selEffect&&mouse.in){
+    pv.style.display="";
+    pv.setAttribute("d",bez(endpoint(selCause,"r"),{x:mouse.x,y:mouse.y}));
+  }else pv.style.display="none";
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+function popup(el,txt){
+  const r=el.getBoundingClientRect(),b=$("#board").getBoundingClientRect();
+  const s=document.createElement("span");
+  s.className="pop absolute font-orb text-lime-300 text-sm pointer-events-none";
+  s.style.left=(r.left-b.left+r.width/2-20)+"px";s.style.top=(r.top-b.top-6)+"px";
+  s.style.zIndex=25;s.style.textShadow="0 0 10px rgba(57,255,136,.8)";
+  s.textContent=txt;$("#board").appendChild(s);setTimeout(()=>s.remove(),1000);
+}
+
+/* ================= TIMER & FLOW ================= */
+function startTimer(){
+  stopTimer();
+  timerInt=setInterval(()=>{
+    if(phase!=="play")return;
+    if(mode==="attack"){
+      timeLeft--;
+      if(timeLeft<=10&&timeLeft>0)SFX.tick();
+      if(timeLeft<=0){timeLeft=0;updTime();return gameOver();}
+    }else elapsed++;
+    updTime();
+  },1000);
+}
+function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}}
+function startGame(){
+  ac();if(AC&&AC.state==="suspended")AC.resume();
+  phase="play";score=0;links=0;attempts=0;elapsed=0;timeLeft=180;
+  $("#startOv").classList.add("hidden");$("#endOv").classList.add("hidden");
+  $("#hudTimeLbl").textContent=mode==="attack"?"TIME LEFT":"TIME";
+  updTime();loadRound(0);startTimer();
+}
+function winGame(){
+  phase="over";stopTimer();
+  const bonus=mode==="attack"?timeLeft*2:0;score+=bonus;updHUD();
+  SFX.win();confettiBurst();setTimeout(confettiBurst,500);
+  fillEnd(true,bonus);
+}
+function gameOver(){
+  phase="over";stopTimer();SFX.lose();
+  fillEnd(false,0);
+}
+function fillEnd(won,bonus){
+  $("#endEmoji").textContent=won?"🏆":"⏳";
+  $("#endTitle").textContent=won?"GRID FULLY POWERED!":"TIME'S UP!";
+  $("#endTitle").className="font-orb font-extrabold text-2xl tracking-wider "+(won?"text-lime-300":"text-red-400");
+  $("#endSub").textContent=won?`Semua 15 jembatan cause-effect tersambung!${bonus?` Bonus waktu: +${bonus}`:""}`
+    :`Jembatan tersambung: ${links}/15 — coba strategi konektor yang lebih cepat!`;
+  $("#stScore").textContent=score;
+  $("#stAcc").textContent=(attempts?Math.round(links/attempts*100):0)+"%";
+  $("#stTime").textContent=fmt(mode==="attack"?180-timeLeft:elapsed);
+  $("#endRank").textContent="RANK: "+(score>=1900?"⚡ QUANTUM GRAMMARIAN":score>=1600?"🌟 ENERGY ARCHITECT":score>=1200?"🔧 SOLID LINKER":"🔩 APPRENTICE ENGINEER");
+  $("#endOv").classList.remove("hidden");
+}
+
+/* ================= OVERLAY & INPUT ================= */
+let modeSel="practice";
+$$(".modeCard").forEach(b=>b.addEventListener("click",()=>{
+  modeSel=b.dataset.mode;ac();SFX.pick();
+  $$(".modeCard").forEach(x=>{x.classList.remove("border-cyan-400","bg-cyan-950/40");x.classList.add("border-[#24466b]","bg-[#0b1424]");});
+  b.classList.remove("border-[#24466b]","bg-[#0b1424]");b.classList.add("border-cyan-400","bg-cyan-950/40");
+}));
+$("#startBtn").addEventListener("click",()=>{mode=modeSel;startGame();});
+$("#againBtn").addEventListener("click",()=>{mode=modeSel===mode?mode:mode;startGame();});
+$("#modeBtn2").addEventListener("click",()=>{$("#endOv").classList.add("hidden");$("#startOv").classList.remove("hidden");phase="menu";stopTimer();});
+$("#menuBtn").addEventListener("click",()=>{phase="menu";stopTimer();$("#startOv").classList.remove("hidden");});
+$("#gramBtn").addEventListener("click",()=>{ac();SFX.pick();$("#gramOv").classList.remove("hidden");});
+$("#gramClose").addEventListener("click",()=>{$("#gramOv").classList.add("hidden");});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(!$("#startOv").classList.contains("hidden")){mode=modeSel;startGame();}
+    else if(!$("#gramOv").classList.contains("hidden"))$("#gramClose").click();
+    else if(!$("#endOv").classList.contains("hidden"))startGame();
+  }
+});
+
+/* ================= DEKOR & KONFETI ================= */
+(function(){for(let i=0;i<42;i++){const s=document.createElement("span");s.className="star";
+  s.style.left=Math.random()*100+"vw";s.style.top=Math.random()*100+"vh";
+  s.style.animationDelay=Math.random()*3+"s";document.body.appendChild(s);}})();
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],run=false;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCv();window.addEventListener("resize",sizeCv);
+function confettiBurst(){
+  const cols=["#22d3ee","#ff3df2","#39ff88","#ffd23f","#ffffff","#b18cff"];
+  for(let i=0;i<150;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.4,
+    vx:(Math.random()-.5)*2.6,vy:2+Math.random()*3.4,s:6+Math.random()*7,r:Math.random()*6.3,
+    vr:(Math.random()-.5)*.26,c:cols[i%cols.length]});
+  if(!run){run=true;requestAnimationFrame(cloop);}
+}
+function cloop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.y<cv.height+30);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();});
+  if(parts.length)requestAnimationFrame(cloop);
+  else{run=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+</script>
+</body>
+</html>
