@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>English Memory Card Match — Synonym & Antonym</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@600;800;900&family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#22254a; --cyan:#35e0ff; --yellow:#ffd23f; --pink:#ff4fd8;
+  --green:#3ee06b; --violet:#7a2fc0; --panel:rgba(13,16,44,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Nunito',sans-serif;color:#fff;min-height:100dvh;overflow-x:hidden;
+  background:linear-gradient(155deg,#1a2160 0%,#4a24a8 45%,#8a2fbe 75%,#c93b9e 100%);
+  background-attachment:fixed;user-select:none;
+}
+/* ---------- BACKGROUND AMBIENT ---------- */
+#bgStars i{position:fixed;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.7;animation:twk 3s ease-in-out infinite;pointer-events:none;z-index:0}
+@keyframes twk{0%,100%{opacity:.15;transform:scale(.7)}50%{opacity:.9;transform:scale(1.2)}}
+.orb{position:fixed;border-radius:50%;filter:blur(46px);opacity:.4;pointer-events:none;z-index:0;animation:float 9s ease-in-out infinite alternate}
+.o1{width:260px;height:260px;background:var(--cyan);top:-60px;left:-70px}
+.o2{width:300px;height:300px;background:var(--pink);bottom:-90px;right:-80px;animation-delay:-3s}
+.o3{width:180px;height:180px;background:var(--yellow);top:36%;right:8%;opacity:.22;animation-delay:-6s}
+@keyframes float{from{transform:translateY(-16px) scale(1)}to{transform:translateY(20px) scale(1.08)}}
+
+/* ---------- LAYOUT ---------- */
+#app{position:relative;z-index:2;max-width:640px;margin:0 auto;padding:16px 14px 26px;display:flex;flex-direction:column;align-items:center}
+.topbar{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.logo{font-family:'Fredoka';font-weight:700;font-size:clamp(21px,4.5vw,30px);line-height:1;
+  color:#fff;text-shadow:0 3px 0 rgba(20,10,60,.5),0 0 22px rgba(53,224,255,.5)}
+.logo .rocket{display:inline-block;animation:bob 1.6s ease-in-out infinite alternate}
+@keyframes bob{from{transform:translateY(-3px) rotate(-8deg)}to{transform:translateY(3px) rotate(8deg)}}
+.logo small{display:block;font-family:'Nunito';font-weight:900;font-size:9.5px;letter-spacing:3.5px;color:var(--cyan);text-shadow:none;margin-top:3px}
+
+.hud{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chip{background:var(--panel);border:2px solid rgba(53,224,255,.5);border-radius:12px;padding:5px 11px;text-align:center;
+  box-shadow:0 4px 0 rgba(10,12,40,.5)}
+.chip b{font-family:'Orbitron';font-weight:800;font-size:15px;display:block;color:var(--yellow);text-shadow:0 0 10px rgba(255,210,63,.5)}
+.chip span{font-size:8.5px;font-weight:900;letter-spacing:1.5px;opacity:.8}
+.iconBtn{width:40px;height:40px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:var(--panel);
+  font-size:17px;color:#fff;box-shadow:0 4px 0 rgba(10,12,40,.5);transition:transform .1s}
+.iconBtn:hover{transform:translateY(-2px)}
+.iconBtn:active{transform:translateY(2px);box-shadow:none}
+
+/* ---------- MODE SWITCH ---------- */
+.modebar{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:12px}
+.seg{display:flex;background:var(--panel);border:2px solid rgba(255,255,255,.25);border-radius:99px;padding:4px;gap:4px;
+  box-shadow:0 5px 0 rgba(10,12,40,.5)}
+.seg button{font-family:'Fredoka';font-weight:700;font-size:14px;letter-spacing:.5px;border:none;border-radius:99px;
+  padding:8px 20px;background:transparent;color:#cfd3ff;transition:all .18s}
+.seg button.active{background:linear-gradient(180deg,#ffe98a,var(--yellow));color:var(--ink);
+  box-shadow:0 0 18px rgba(255,210,63,.6);transform:scale(1.04)}
+#modeHint{font-size:12px;font-weight:800;color:#e7e9ff;opacity:.92;text-align:center}
+#modeHint b{color:var(--yellow)}
+
+/* ---------- BOARD ---------- */
+#board{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;width:min(560px,96vw);perspective:1400px}
+.card{position:relative;aspect-ratio:1;perspective:800px;cursor:pointer;background:none;border:none;padding:0;
+  animation:deal .55s cubic-bezier(.3,1.5,.5,1) backwards;outline:none}
+.card:focus-visible .card-inner{box-shadow:0 0 0 3px var(--yellow)}
+@keyframes deal{from{transform:scale(.4) rotateY(180deg);opacity:0}to{transform:scale(1) rotateY(0);opacity:1}}
+.card-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.3,1.35,.4,1);border-radius:15px}
+.card:not(.flipped):not(.matched):hover .card-inner{transform:rotateY(16deg) translateY(-4px)}
+.card.flipped .card-inner,.card.matched .card-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:15px;
+  display:grid;place-items:center;overflow:hidden}
+/* punggung kartu */
+.face.back{
+  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.28) 0 3px,transparent 4px),
+             radial-gradient(circle at 72% 68%,rgba(255,255,255,.25) 0 2.5px,transparent 3.5px),
+             radial-gradient(circle at 62% 22%,rgba(255,255,255,.2) 0 2px,transparent 3px),
+             linear-gradient(150deg,#28b9e8,#2b5be0 55%,#7a2fc0);
+  border:3px solid rgba(255,255,255,.5);box-shadow:0 6px 0 rgba(10,12,40,.45), inset 0 0 26px rgba(255,255,255,.14)}
+.face.back .q{font-family:'Fredoka';font-weight:700;font-size:clamp(26px,7vw,42px);color:var(--yellow);
+  text-shadow:0 3px 0 rgba(30,20,80,.5),0 0 18px rgba(255,210,63,.75)}
+.face.back .mini{position:absolute;bottom:6px;font-size:11px;opacity:.9}
+/* depan kartu */
+.face.front{transform:rotateY(180deg);background:linear-gradient(180deg,#ffffff,#eef2ff);
+  border:3px solid #b9c3ff;box-shadow:0 6px 0 rgba(10,12,40,.45);
+  font-family:'Fredoka';font-weight:600;font-size:clamp(12px,3.6vw,19px);color:var(--ink);
+  letter-spacing:.5px;text-transform:uppercase;text-align:center;padding:4px;line-height:1.15}
+.face.front::before{content:"✦";position:absolute;top:5px;left:7px;font-size:10px;color:#8fa0ff}
+.face.front::after{content:"✓";position:absolute;top:2px;right:7px;font-weight:900;font-size:15px;color:var(--green);
+  opacity:0;transition:opacity .3s}
+/* cocok */
+.card.matched .face.front{background:linear-gradient(180deg,#eafff0,#c9f7d6);border-color:var(--green);
+  box-shadow:0 0 22px rgba(62,224,107,.75),0 6px 0 rgba(10,40,20,.5)}
+.card.matched .face.front::after{opacity:1}
+.card.matched{animation:popM .5s cubic-bezier(.3,1.6,.5,1);cursor:default}
+@keyframes popM{0%{transform:scale(1)}45%{transform:scale(1.13) rotate(2deg)}100%{transform:scale(1)}}
+/* salah */
+.card.shake{animation:shakeX .5s}
+.card.shake .face.front{border-color:#ff5d5d;box-shadow:0 0 20px rgba(255,93,93,.8),0 6px 0 rgba(60,10,10,.5)}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+.foot{margin-top:14px;font-size:11px;font-weight:800;letter-spacing:.4px;opacity:.75;text-align:center}
+
+/* ---------- OVERLAY MENANG ---------- */
+.ov{position:fixed;inset:0;background:rgba(8,8,28,.78);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.ov.hidden{display:none}
+.winCard{width:min(430px,94%);background:linear-gradient(180deg,#ffffff,#eef1ff);color:var(--ink);border-radius:22px;
+  border:4px solid var(--yellow);padding:24px 24px 26px;text-align:center;box-shadow:0 0 50px rgba(255,210,63,.4),0 14px 0 rgba(0,0,0,.35);
+  animation:cin .45s cubic-bezier(.3,1.4,.5,1)}
+@keyframes cin{from{transform:translateY(40px) scale(.9);opacity:0}to{transform:none;opacity:1}}
+.trophy{font-size:58px;animation:bob 1.2s ease-in-out infinite alternate}
+.winCard h2{font-family:'Fredoka';font-weight:700;font-size:38px;color:#3b2fb8;letter-spacing:1px;line-height:1}
+.stars{font-size:34px;margin:6px 0 4px;letter-spacing:6px}
+.stars span{display:inline-block;opacity:.18;transform:scale(.6);filter:grayscale(1)}
+.stars span.on{opacity:1;transform:scale(1);filter:none;animation:starIn .5s cubic-bezier(.3,1.8,.5,1) backwards}
+@keyframes starIn{from{transform:scale(0) rotate(-120deg)}to{transform:scale(1) rotate(0)}}
+#winMsg{font-weight:800;font-size:13.5px;margin-bottom:12px}
+.wstats{display:flex;gap:8px;justify-content:center;margin-bottom:10px}
+.wstats div{flex:1;background:#f1f3ff;border:2.5px solid #c3ccff;border-radius:12px;padding:8px 4px}
+.wstats b{font-family:'Orbitron';font-size:17px;display:block;color:#3b2fb8}
+.wstats span{font-size:8.5px;font-weight:900;letter-spacing:1.5px;color:#7a82b8}
+.newbest{font-family:'Fredoka';font-weight:700;color:#d78a00;font-size:14px;margin-bottom:10px;animation:popM .6s}
+.newbest.hidden{display:none}
+.wbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.wbtns button{font-family:'Fredoka';font-weight:700;font-size:15px;border-radius:13px;padding:11px 20px;cursor:pointer;
+  border:3px solid var(--ink);transition:transform .1s}
+.wbtns button:hover{transform:translateY(-2px)}
+.wbtns button:active{transform:translateY(2px)}
+#btnAgain{background:linear-gradient(180deg,#8af0a2,var(--green));color:var(--ink);box-shadow:0 5px 0 #1f7a37}
+#btnSwitch{background:linear-gradient(180deg,#8fe6ff,var(--cyan));color:var(--ink);box-shadow:0 5px 0 #0d7f92}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:80}
+@media (max-width:430px){
+  #board{gap:8px}
+  .chip{padding:4px 8px}.chip b{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div id="bgStars"></div>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+
+<main id="app">
+  <header class="topbar">
+    <div class="logo"><span class="rocket">🚀</span> MEMORY MATCH
+      <small>ENGLISH • SINONIM & ANTONIM</small>
+    </div>
+    <div class="hud">
+      <div class="chip"><b id="timeTxt">00:00</b><span>TIME</span></div>
+      <div class="chip"><b id="moveTxt">0</b><span>MOVES</span></div>
+      <div class="chip"><b id="pairTxt">0/8</b><span>PAIRS</span></div>
+      <div class="chip"><b id="bestTxt">—</b><span>BEST</span></div>
+      <button class="iconBtn" id="btnShuffle" title="Papan baru">🔀</button>
+      <button class="iconBtn" id="btnMute" title="Suara">🔊</button>
+    </div>
+  </header>
+
+  <div class="modebar">
+    <div class="seg">
+      <button id="modeSyn" class="active">🔁 SYNONYM</button>
+      <button id="modeAnt">⚡ ANTONYM</button>
+    </div>
+    <p id="modeHint">Temukan pasangan kata dengan <b>arti yang SAMA</b>! (same meaning)</p>
+  </div>
+
+  <section id="board" aria-label="Papan kartu"></section>
+
+  <p class="foot">🖱️ Klik 2 kartu untuk mencocokkan • temukan semua pasangan secepat mungkin!</p>
+</main>
+
+<!-- MENANG -->
+<div class="ov hidden" id="winOv">
+  <div class="winCard">
+    <div class="trophy">🏆</div>
+    <h2>YOU WIN!</h2>
+    <div class="stars" id="stars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <p id="winMsg"></p>
+    <div class="wstats">
+      <div><b id="wTime">00:00</b><span>TIME</span></div>
+      <div><b id="wMoves">0</b><span>MOVES</span></div>
+      <div><b id="wMode">SYN</b><span>MODE</span></div>
+    </div>
+    <div class="newbest hidden" id="newBest">⭐ NEW BEST TIME! ⭐</div>
+    <div class="wbtns">
+      <button id="btnAgain">🔁 PLAY AGAIN</button>
+      <button id="btnSwitch">🔀 SWITCH MODE</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+
+/* ============ BANK KATA (edit di sini) ============ */
+const SYN=[["Big","Huge"],["Happy","Joyful"],["Smart","Clever"],["Fast","Quick"],["Small","Tiny"],
+ ["Begin","Start"],["Beautiful","Pretty"],["Strong","Powerful"],["Easy","Simple"],["Angry","Mad"],
+ ["Help","Assist"],["End","Finish"]];
+const ANT=[["Big","Small"],["Happy","Sad"],["Hot","Cold"],["Fast","Slow"],["Day","Night"],
+ ["Old","New"],["Light","Dark"],["Win","Lose"],["Loud","Quiet"],["Full","Empty"],
+ ["Clean","Dirty"],["Hard","Soft"]];
+
+/* ============ STATE ============ */
+let mode="syn", first=null, lock=false, matched=0, moves=0;
+let timerOn=false, tHandle=null, startT=0, elapsed=0, muted=false;
+const TOTAL=8;
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+
+/* ============ AUDIO (Web Audio API) ============ */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}}return AC;}
+function tone(f,dur=.12,type="sine",g=.16,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);
+}
+const SFX={
+  flip(){tone(520,.07,"triangle",.13,780);},
+  match(){tone(660,.1,"sine",.18);tone(880,.16,"sine",.18,0,.09);tone(1320,.2,"triangle",.1,0,.18);},
+  miss(){tone(210,.24,"sawtooth",.1,140);},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.18,"triangle",.19,0,i*.12));tone(1568,.55,"triangle",.16,0,.64);}
+};
+$("#btnMute").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ============ TIMER ============ */
+function startTimer(){
+  if(timerOn)return;timerOn=true;startT=Date.now()-elapsed*1000;
+  tHandle=setInterval(()=>{elapsed=Math.floor((Date.now()-startT)/1000);$("#timeTxt").textContent=fmt(elapsed);},250);
+}
+function stopTimer(){clearInterval(tHandle);tHandle=null;timerOn=false;}
+function resetTimer(){stopTimer();elapsed=0;$("#timeTxt").textContent="00:00";}
+
+/* ============ BEST TIME (localStorage) ============ */
+function bestKey(){return "mm_best_"+mode;}
+function loadBest(){try{return parseInt(localStorage.getItem(bestKey()))||null;}catch(e){return null;}}
+function renderBest(){const b=loadBest();$("#bestTxt").textContent=b?fmt(b):"—";}
+
+/* ============ BOARD ============ */
+function newGame(){
+  const pool=mode==="syn"?SYN:ANT;
+  const pairs=shuffle(pool).slice(0,TOTAL);
+  const cards=shuffle(pairs.flatMap(([a,b],i)=>[{id:i,text:a},{id:i,text:b}]));
+  first=null;lock=false;matched=0;moves=0;
+  $("#moveTxt").textContent="0";$("#pairTxt").textContent=`0/${TOTAL}`;
+  $("#winOv").classList.add("hidden");
+  resetTimer();renderBest();
+  const board=$("#board");board.innerHTML="";
+  cards.forEach((c,i)=>{
+    const btn=document.createElement("button");
+    btn.className="card";btn.dataset.id=c.id;btn.style.animationDelay=(i*45)+"ms";
+    btn.setAttribute("aria-label","kartu "+c.text);
+    btn.innerHTML=`<div class="card-inner">
+      <div class="face back"><span class="q">?</span><span class="mini">🚀</span></div>
+      <div class="face front">${c.text}</div>
+    </div>`;
+    btn.addEventListener("click",()=>onCard(btn));
+    board.appendChild(btn);
+  });
+}
+function onCard(btn){
+  if(lock)return;
+  if(btn.classList.contains("flipped")||btn.classList.contains("matched"))return;
+  ac();if(AC&&AC.state==="suspended")AC.resume();
+  SFX.flip();startTimer();
+  btn.classList.add("flipped");
+  if(!first){first=btn;return;}
+  const second=btn;lock=true;moves++;$("#moveTxt").textContent=moves;
+  setTimeout(()=>evaluate(first,second),520);
+}
+function evaluate(a,b){
+  if(a.dataset.id===b.dataset.id){
+    SFX.match();
+    a.classList.add("matched");b.classList.add("matched");
+    matched++;$("#pairTxt").textContent=`${matched}/${TOTAL}`;
+    first=null;lock=false;
+    if(matched===TOTAL)win();
+  }else{
+    SFX.miss();
+    a.classList.add("shake");b.classList.add("shake");
+    setTimeout(()=>{
+      a.classList.remove("flipped","shake");b.classList.remove("flipped","shake");
+      first=null;lock=false;
+    },680);
+  }
+}
+
+/* ============ MENANG ============ */
+function win(){
+  stopTimer();SFX.win();confettiBurst();
+  const stars=moves<=11?3:moves<=16?2:1;
+  $("#winMsg").textContent=mode==="syn"
+    ?`Hebat! Kamu mencocokkan ${TOTAL} pasangan SINONIM!`
+    :`Hebat! Kamu mencocokkan ${TOTAL} pasangan ANTONIM!`;
+  $("#wTime").textContent=fmt(elapsed);
+  $("#wMoves").textContent=moves;
+  $("#wMode").textContent=mode==="syn"?"SYNONYM":"ANTONYM";
+  const st=$("#stars").children;
+  for(let i=0;i<3;i++){
+    st[i].classList.toggle("on",i<stars);
+    st[i].style.animationDelay=(0.2+i*0.25)+"s";
+  }
+  const best=loadBest();let isNew=false;
+  if(!best||elapsed<best){try{localStorage.setItem(bestKey(),elapsed);}catch(e){}isNew=true;}
+  $("#newBest").classList.toggle("hidden",!isNew);
+  renderBest();
+  setTimeout(()=>$("#winOv").classList.remove("hidden"),700);
+}
+
+/* ============ MODE & TOMBOL ============ */
+function setMode(m){
+  mode=m;
+  $("#modeSyn").classList.toggle("active",m==="syn");
+  $("#modeAnt").classList.toggle("active",m==="ant");
+  $("#modeHint").innerHTML=m==="syn"
+    ?"Temukan pasangan kata dengan <b>arti yang SAMA</b>! (same meaning)"
+    :"Temukan pasangan kata dengan <b>arti BERLAWANAN</b>! (opposite meaning)";
+  newGame();
+}
+$("#modeSyn").addEventListener("click",()=>setMode("syn"));
+$("#modeAnt").addEventListener("click",()=>setMode("ant"));
+$("#btnShuffle").addEventListener("click",()=>{ac();newGame();});
+$("#btnAgain").addEventListener("click",newGame);
+$("#btnSwitch").addEventListener("click",()=>setMode(mode==="syn"?"ant":"syn"));
+
+/* ============ DEKORASI & KONFETI ============ */
+(function(){let h="";for(let i=0;i<44;i++)
+  h+=`<i style="left:${Math.random()*100}vw;top:${Math.random()*100}vh;animation-delay:${Math.random()*3}s;transform:scale(${.6+Math.random()})"></i>`;
+  $("#bgStars").innerHTML=h;})();
+const cv=$("#confetti"),cx=cv.getContext("2d");let parts=[],run=false;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCv();window.addEventListener("resize",sizeCv);
+function confettiBurst(){
+  const cols=["#ffd23f","#35e0ff","#ff4fd8","#3ee06b","#ffffff","#ff9f43"];
+  for(let i=0;i<190;i++)parts.push({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,
+    vx:(Math.random()-.5)*2.6,vy:2+Math.random()*3.4,s:6+Math.random()*7,r:Math.random()*6.3,
+    vr:(Math.random()-.5)*.26,c:cols[i%cols.length]});
+  if(!run){run=true;requestAnimationFrame(loop);}
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.y<cv.height+30);
+  parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.62);cx.restore();});
+  if(parts.length)requestAnimationFrame(loop);
+  else{run=false;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* init */
+newGame();
+</script>
+</body>
+</html>
