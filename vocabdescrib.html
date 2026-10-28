@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dungeon Word Explorer — Vocabulary & Descriptive Text</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{fontFamily:{press:['"Press Start 2P"','monospace'],vt:['VT323','monospace']}}}};
+</script>
+<style>
+  body{background:#0b0b12;}
+  .pixelated{image-rendering:pixelated;image-rendering:crisp-edges;}
+  /* CRT scanlines + vignette */
+  .crt::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:20;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px);}
+  .crt::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:21;
+    box-shadow:inset 0 0 90px rgba(0,0,0,.75);}
+  .pixel-border{box-shadow:0 0 0 3px #0b0b12,0 0 0 6px #4b3a72,8px 8px 0 rgba(0,0,0,.55);}
+  .btn-px{transition:transform .08s;}
+  .btn-px:hover{filter:brightness(1.15);}
+  .btn-px:active{transform:translateY(3px);}
+  .heart{display:inline-block;font-size:20px;line-height:1;filter:drop-shadow(0 2px 0 #000);transition:all .25s;}
+  .heart.dead{color:#3a3a4a;transform:scale(.8);}
+  @keyframes hpop{45%{transform:scale(1.35)}}
+  .heart.pop{animation:hpop .4s;}
+  @keyframes bannerIn{0%{transform:scale(.3);opacity:0}55%{transform:scale(1.12);opacity:1}100%{transform:scale(1)}}
+  .banner-anim{animation:bannerIn .5s cubic-bezier(.3,1.5,.5,1);}
+  @keyframes blinkT{50%{opacity:.25}}
+  .time-low{color:#ff5d5d !important;animation:blinkT .5s steps(2) infinite;}
+  @keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+  .shake{animation:shakeX .45s;}
+  @keyframes redflash{0%{opacity:.6}100%{opacity:0}}
+  #redFlash{position:absolute;inset:0;background:#e2574c;opacity:0;pointer-events:none;z-index:22;}
+  #redFlash.on{animation:redflash .5s ease-out;}
+  /* kembang api CSS */
+  .fw-p{position:absolute;width:7px;height:7px;z-index:30;pointer-events:none;animation:fw .9s ease-out forwards;}
+  @keyframes fw{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+  .fw-ring{position:absolute;width:14px;height:14px;border:3px solid #f7d854;border-radius:9999px;z-index:30;pointer-events:none;animation:ring .55s ease-out forwards;}
+  @keyframes ring{to{transform:scale(7);opacity:0}}
+  @keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-46px);opacity:0}}
+  .dpad button{touch-action:none;}
+  .opt-correct{background:#1e7a3c !important;border-color:#7cf7a8 !important;}
+  .opt-wrong{background:#8a2420 !important;border-color:#ff8a7a !important;}
+</style>
+</head>
+<body class="min-h-screen text-slate-100 font-vt flex flex-col items-center py-3 px-2 select-none">
+
+<!-- ============ HUD ============ -->
+<header class="w-full max-w-[900px] bg-[#14101d] border-4 border-[#3a2b55] pixel-border rounded-sm px-3 py-2 mb-3 flex items-center gap-x-4 gap-y-2 flex-wrap">
+  <h1 class="font-press text-[10px] sm:text-xs text-amber-300 leading-4" style="text-shadow:2px 2px 0 #7c2d12">🕹️ DUNGEON<br class="sm:hidden"> WORD EXPLORER</h1>
+  <div class="flex items-center gap-4 sm:gap-6 ml-auto flex-wrap">
+    <div class="text-center"><div class="font-press text-[8px] text-purple-300 mb-1">FLOOR</div><div id="hudFloor" class="font-press text-sm text-white">1/3</div></div>
+    <div class="text-center"><div class="font-press text-[8px] text-purple-300 mb-1">SCORE</div><div id="hudScore" class="font-press text-sm text-amber-300">0</div></div>
+    <div class="text-center"><div class="font-press text-[8px] text-purple-300 mb-1">BEST</div><div id="hudBest" class="font-press text-sm text-cyan-300">0</div></div>
+    <div class="text-center"><div class="font-press text-[8px] text-purple-300 mb-1">HP</div><div id="heartsBox" class="text-red-400"></div></div>
+    <div class="text-center"><div class="font-press text-[8px] text-purple-300 mb-1">TIME</div><div id="hudTime" class="font-press text-sm text-lime-300">60</div></div>
+    <button id="muteBtn" class="btn-px bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm px-2 py-1 text-lg" title="Suara">🔊</button>
+  </div>
+</header>
+
+<!-- ============ GAME AREA ============ -->
+<div id="gameWrap" class="relative w-full max-w-[900px] border-4 border-[#3a2b55] pixel-border bg-black crt overflow-hidden">
+  <canvas id="game" width="480" height="270" class="w-full block pixelated"></canvas>
+  <div id="fxLayer" class="absolute inset-0 pointer-events-none z-30"></div>
+  <div id="redFlash"></div>
+  <div id="banner" class="hidden absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+    <span id="bannerTxt" class="font-press text-amber-300 text-lg sm:text-2xl text-center px-4 leading-8" style="text-shadow:3px 3px 0 #000"></span>
+  </div>
+
+  <!-- START OVERLAY -->
+  <div id="startOv" class="absolute inset-0 z-50 bg-[#0b0b12]/90 flex items-center justify-center p-3">
+    <div class="text-center max-w-md">
+      <div class="font-press text-amber-300 text-base sm:text-xl leading-8 mb-3" style="text-shadow:3px 3px 0 #7c2d12">⚔️ DUNGEON<br>WORD EXPLORER</div>
+      <p class="text-xl text-cyan-200 mb-3">Vocabulary & Descriptive Text</p>
+      <ul class="text-left text-lg sm:text-xl text-slate-300 space-y-1 mb-4 mx-auto inline-block">
+        <li>🚶 Gerakkan karakter dengan <b class="text-amber-300">panah / WASD</b>.</li>
+        <li>🧩 Sentuh <b class="text-amber-300">peti harta</b> → jawab teka-teki deskriptif.</li>
+        <li>✅ Benar = peti terbuka, <b class="text-lime-300">+100 poin</b>!</li>
+        <li>❌ Salah = kehilangan <b class="text-red-400">1 HP</b> (total 3).</li>
+        <li>⏱ <b class="text-lime-300">60 detik</b> per lantai • 3 lantai • 15 soal.</li>
+      </ul>
+      <button id="startBtn" class="btn-px font-press text-sm bg-lime-500 text-black border-4 border-black px-6 py-4 rounded-sm" style="box-shadow:0 6px 0 #14532d">▶ PRESS START</button>
+      <p class="text-base text-slate-500 mt-3">atau tekan ENTER</p>
+    </div>
+  </div>
+
+  <!-- END OVERLAY -->
+  <div id="endOv" class="hidden absolute inset-0 z-50 bg-[#0b0b12]/90 flex items-center justify-center p-3">
+    <div class="text-center max-w-md">
+      <div id="endEmoji" class="text-6xl mb-2">💀</div>
+      <div id="endTitle" class="font-press text-lg sm:text-xl text-red-400 leading-8 mb-2" style="text-shadow:3px 3px 0 #000">GAME OVER</div>
+      <p id="endReason" class="text-xl text-slate-300 mb-3"></p>
+      <div class="font-press text-[10px] text-purple-300 mb-1">FINAL SCORE</div>
+      <div id="endScore" class="font-press text-3xl text-amber-300 mb-2">0</div>
+      <div id="endRank" class="text-xl text-cyan-300 mb-4"></div>
+      <button id="againBtn" class="btn-px font-press text-xs bg-amber-400 text-black border-4 border-black px-6 py-4 rounded-sm" style="box-shadow:0 6px 0 #92400e">🔄 PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <!-- QUIZ MODAL -->
+  <div id="quizOv" class="hidden absolute inset-0 z-50 bg-black/75 flex items-center justify-center p-3">
+    <div id="quizBox" class="w-full max-w-lg bg-[#1a1423] border-4 border-amber-300 pixel-border rounded-sm p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span id="quizTag" class="font-press text-[8px] bg-purple-800 text-purple-100 px-2 py-1 rounded-sm">FLOOR 1 • CHEST 1</span>
+        <span id="quizCat" class="font-press text-[8px] bg-cyan-800 text-cyan-100 px-2 py-1 rounded-sm">TECH</span>
+      </div>
+      <p class="font-press text-[9px] text-amber-300 mb-2">📜 READ THE DESCRIPTION…</p>
+      <p id="quizQ" class="text-2xl leading-7 text-slate-100 mb-4"></p>
+      <div id="optsBox" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+      <p class="text-base text-slate-500 mt-3 text-center">tekan 1–4 atau klik jawaban</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ D-PAD & HINT ============ -->
+<div class="w-full max-w-[900px] flex items-center justify-between mt-3 gap-3 flex-wrap">
+  <div class="dpad grid grid-cols-3 gap-1" style="width:150px">
+    <span></span><button data-dir="up" class="bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm py-2 text-lg btn-px">▲</button><span></span>
+    <button data-dir="left" class="bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm py-2 text-lg btn-px">◀</button>
+    <button data-dir="down" class="bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm py-2 text-lg btn-px">▼</button>
+    <button data-dir="right" class="bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm py-2 text-lg btn-px">▶</button>
+  </div>
+  <p class="text-lg text-slate-500">🎯 Buka semua peti di 3 lantai dungeon. Jangan kehabisan HP atau waktu!</p>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+
+/* ================= SOAL (edit di sini) ================= */
+const QUESTIONS=[
+ {t:"I am a device that connects multiple networks and routes traffic between them. What am I?",cat:"TECH",ok:"A router",o:["A router","A printer","A speaker","A scanner"]},
+ {t:"I have a screen and a keyboard. I am portable, so you can carry me and work anywhere. What am I?",cat:"TECH",ok:"A laptop",o:["A laptop","A blender","A mirror","A whiteboard"]},
+ {t:"I store your files, photos, and programs. I keep them safe even when the power is off. What am I?",cat:"TECH",ok:"A hard drive",o:["A monitor","A hard drive","A mouse","A cable"]},
+ {t:"I look like a television. I show you pictures, videos, and your work from the computer. What am I?",cat:"TECH",ok:"A monitor",o:["A radio","An oven","A monitor","A fan"]},
+ {t:"I fit in your pocket. People use me to make calls, send messages, and take photos. What am I?",cat:"TECH",ok:"A smartphone",o:["A television","A smartphone","A refrigerator","A stove"]},
+ {t:"I am small and light. You plug me into a USB port to move files between computers. What am I?",cat:"TECH",ok:"A flash drive",o:["A pillow","A bottle","An eraser","A flash drive"]},
+ {t:"I take documents from your computer and put them on paper. What am I?",cat:"TECH",ok:"A printer",o:["A camera","A lamp","A printer","A keyboard"]},
+ {t:"I am a program that protects your computer from viruses and dangerous files. What am I?",cat:"TECH",ok:"An antivirus",o:["An antivirus","A wallpaper","A music player","A calculator"]},
+ {t:"I am cold inside. I keep your food and drinks fresh for many days. What am I?",cat:"DAILY LIFE",ok:"A refrigerator",o:["A bookshelf","A wardrobe","A refrigerator","A cupboard"]},
+ {t:"I have two wheels and no engine. You ride me by pedaling with your feet. What am I?",cat:"DAILY LIFE",ok:"A bicycle",o:["A car","A train","A boat","A bicycle"]},
+ {t:"I have a small round face and two hands. You wear me on your wrist to know the time. What am I?",cat:"DAILY LIFE",ok:"A watch",o:["A ring","A watch","A pair of glasses","A belt"]},
+ {t:"I live on your desk or on the ceiling. You turn me on when the room is dark. What am I?",cat:"DAILY LIFE",ok:"A lamp",o:["A broom","A clock","A lamp","A fan"]},
+ {t:"I am flat and I have four legs, but I cannot walk. Your family gathers around me to eat. What am I?",cat:"DAILY LIFE",ok:"A table",o:["A pillow","A door","A table","A window"]},
+ {t:"I am very popular in Indonesian kitchens. I cook rice automatically and keep it warm. What am I?",cat:"DAILY LIFE",ok:"A rice cooker",o:["A mirror","A rice cooker","A comb","A soap"]},
+ {t:"I have blades that spin quickly. I make you feel cool on a hot day. What am I?",cat:"DAILY LIFE",ok:"A fan",o:["An umbrella","A candle","A fan","A pair of scissors"]}
+];
+
+/* ================= AUDIO ================= */
+let AC=null,muted=false,noiseBuf=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();
+  noiseBuf=AC.createBuffer(1,AC.sampleRate*.5,AC.sampleRate);
+  const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}catch(e){}}return AC;}
+function tone(f,dur=.12,type="square",g=.16,slide=null,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,o=a.createOscillator(),v=a.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);
+  if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+  v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(v);v.connect(a.destination);o.start(t);o.stop(t+dur+.03);}
+function noiseHit(dur=.25,g=.2,fc=1400,delay=0){
+  if(muted)return;const a=ac();if(!a)return;
+  const t=a.currentTime+delay,s=a.createBufferSource();s.buffer=noiseBuf;
+  const f=a.createBiquadFilter();f.type="lowpass";f.frequency.value=fc;
+  const v=a.createGain();v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(f);f.connect(v);v.connect(a.destination);s.start(t);s.stop(t+dur);}
+const SFX={
+  correct(){tone(988,.09,"square",.17);tone(1319,.3,"square",.17,0,.09);noiseHit(.3,.1,5000,.1);},
+  wrong(){tone(220,.3,"sawtooth",.16,110);tone(90,.3,"sine",.3,50,0,.05);},
+  open(){tone(160,.16,"triangle",.14,90);tone(520,.1,"square",.08,0,.14);},
+  step(){tone(95,.04,"sine",.05);},
+  tick(){tone(1250,.05,"square",.1);},
+  clear(){[523,659,784,1046].forEach((f,i)=>tone(f,.14,"triangle",.18,0,i*.1));},
+  win(){[523,659,784,1046,784,1046,1319].forEach((f,i)=>tone(f,.17,"triangle",.2,0,i*.13));},
+  over(){[392,330,262,196].forEach((f,i)=>tone(f,.3,"sawtooth",.11,0,i*.2));}
+};
+$("#muteBtn").addEventListener("click",e=>{muted=!muted;e.target.textContent=muted?"🔇":"🔊";});
+
+/* ================= STATE ================= */
+const cv=$("#game"),ctx=cv.getContext("2d"),W=480,H=270;
+let phase="menu",floor=1,score=0,hp=3,time=60,tAcc=0,deck=[],chests=[],quizOpen=false,quiz=null,touchCd=0;
+let particles=[],floats=[],best=0;
+try{best=parseInt(localStorage.getItem("dwe_best"))||0;}catch(e){}
+$("#hudBest").textContent=best;
+const player={x:240,y:232,dir:"down",walkT:0,moving:false,stepT:0};
+const keys={},dpad={up:0,down:0,left:0,right:0};
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+/* ================= HUD ================= */
+function renderHearts(){
+  const b=$("#heartsBox");b.innerHTML="";
+  for(let i=0;i<3;i++){const s=document.createElement("span");s.className="heart"+(i<hp?"":" dead");s.textContent="♥";b.appendChild(s);}
+}
+function popHeart(){const h=$$("#heartsBox .heart")[hp];if(h)h.classList.add("pop");}
+function updateScore(){const el=$("#hudScore");el.textContent=score;el.style.animation="none";void el.offsetWidth;el.style.animation="hpop .35s";}
+function updateTime(){const el=$("#hudTime");el.textContent=time;el.classList.toggle("time-low",time<=10);}
+const $$=s=>document.querySelectorAll(s);
+
+/* ================= ALUR GAME ================= */
+function startGame(){
+  score=0;hp=3;deck=shuffle(QUESTIONS);
+  updateScore();renderHearts();
+  $("#startOv").classList.add("hidden");$("#endOv").classList.add("hidden");
+  startFloor(1);
+}
+const CHEST_POS=[[72,96],[408,96],[240,80],[120,196],[360,196]];
+function startFloor(f){
+  floor=f;$("#hudFloor").textContent=f+"/3";
+  time=60;tAcc=0;updateTime();
+  const qs=deck.slice((f-1)*5,f*5);
+  chests=qs.map((q,i)=>{
+    const opts=shuffle(q.o);
+    return {x:CHEST_POS[i][0],y:CHEST_POS[i][1],opened:false,q,opts,ci:opts.indexOf(q.ok),idx:i};
+  });
+  player.x=240;player.y=232;player.dir="down";
+  phase="banner";showBanner("FLOOR "+f+" 🏰",1200,()=>{phase="play";});
+}
+function showBanner(txt,ms,cb){
+  const b=$("#banner"),t=$("#bannerTxt");
+  t.textContent=txt;b.classList.remove("hidden");
+  t.classList.remove("banner-anim");void t.offsetWidth;t.classList.add("banner-anim");
+  setTimeout(()=>{b.classList.add("hidden");cb&&cb();},ms);
+}
+function openQuiz(ch){
+  if(quizOpen||ch.opened||touchCd>0||phase!=="play")return;
+  quizOpen=true;quiz=ch;phase="quiz";SFX.open();
+  $("#quizTag").textContent=`FLOOR ${floor} • CHEST ${ch.idx+1}`;
+  $("#quizCat").textContent=ch.q.cat;
+  $("#quizQ").textContent=ch.q.t;
+  const box=$("#optsBox");box.innerHTML="";
+  ch.opts.forEach((o,i)=>{
+    const b=document.createElement("button");
+    b.className="opt btn-px text-left text-xl bg-[#241b33] border-2 border-[#6f5b8f] rounded-sm px-3 py-2 flex items-center gap-3";
+    b.innerHTML=`<span class="font-press text-[10px] bg-amber-400 text-black px-2 py-1 rounded-sm">${"ABCD"[i]}</span><span>${o}</span>`;
+    b.addEventListener("click",()=>pick(i,b));
+    box.appendChild(b);
+  });
+  $("#quizOv").classList.remove("hidden");
+}
+function pick(i,btn){
+  if(!quiz||btn.classList.contains("opt-correct")||quiz.locked)return;
+  quiz.locked=true;
+  const ch=quiz;
+  if(i===ch.ci){
+    btn.classList.add("opt-correct");
+    SFX.correct();score+=100;updateScore();
+    ch.opened=true;
+    fireworksAt(ch);sparks(ch.x,ch.y);floats.push({x:ch.x,y:ch.y-20,txt:"+100",life:1000});
+    setTimeout(()=>{
+      closeQuiz();
+      if(chests.every(c=>c.opened))floorClear();
+    },750);
+  }else{
+    btn.classList.add("opt-wrong");
+    $("#quizBox").classList.add("shake");setTimeout(()=>$("#quizBox").classList.remove("shake"),500);
+    flashRed();SFX.wrong();
+    hp--;renderHearts();popHeart();
+    if(hp<=0){setTimeout(()=>{closeQuiz();gameOver("hp");},700);}
+    else setTimeout(closeQuiz,850);
+  }
+}
+function closeQuiz(){
+  $("#quizOv").classList.add("hidden");
+  quizOpen=false;quiz=null;phase="play";touchCd=700;
+}
+function floorClear(){
+  SFX.clear();
+  if(floor<3){phase="banner";showBanner("FLOOR CLEARED! ⭐",1500,()=>startFloor(floor+1));}
+  else win();
+}
+function gameOver(reason){
+  phase="over";SFX.over();
+  $("#endEmoji").textContent="💀";
+  $("#endTitle").textContent="GAME OVER";$("#endTitle").style.color="#f87171";
+  $("#endReason").textContent=reason==="hp"?"Your HP ran out. The dungeon wins this time…":"Time's up! The dungeon gates have closed…";
+  showEnd();
+}
+function win(){
+  phase="win";SFX.win();
+  for(let i=0;i<3;i++)setTimeout(()=>fireworksScreen(),i*350);
+  $("#endEmoji").textContent="🏆";
+  $("#endTitle").textContent="DUNGEON CLEARED!";$("#endTitle").style.color="#7cf7a8";
+  $("#endReason").textContent="You opened all 15 treasure chests!";
+  showEnd(true);
+}
+function showEnd(won){
+  $("#endScore").textContent=score;
+  $("#endRank").textContent=won?(hp===3?"GELAR: FLAWLESS EXPLORER 👑":hp===2?"GELAR: SKILLED EXPLORER ⚔️":"GELAR: DUNGEON SURVIVOR 🛡️"):"Coba lagi — kamu pasti bisa!";
+  if(score>best){best=score;try{localStorage.setItem("dwe_best",best);}catch(e){}$("#hudBest").textContent=best;}
+  $("#endOv").classList.remove("hidden");
+}
+function flashRed(){const r=$("#redFlash");r.classList.remove("on");void r.offsetWidth;r.classList.add("on");}
+
+/* ================= EFEK ================= */
+function sparks(x,y){
+  const cols=["#f7d854","#ffd23f","#7cf7a8","#ffffff","#ff9ecb"];
+  for(let i=0;i<26;i++){
+    const a=Math.random()*Math.PI*2,v=40+Math.random()*90;
+    particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,life:700+Math.random()*400,size:2+Math.random()*2,color:cols[i%cols.length]});
+  }
+}
+function fireworksAt(ch){
+  const wrap=$("#gameWrap"),fx=$("#fxLayer");
+  const x=ch.x/W*wrap.clientWidth,y=ch.y/H*wrap.clientHeight;
+  const ring=document.createElement("span");ring.className="fw-ring";ring.style.left=(x-7)+"px";ring.style.top=(y-7)+"px";
+  fx.appendChild(ring);setTimeout(()=>ring.remove(),600);
+  const cols=["#f7d854","#7cf7a8","#ff9ecb","#8fe6ff","#ffffff"];
+  for(let i=0;i<14;i++){
+    const p=document.createElement("span");p.className="fw-p";
+    p.style.left=x+"px";p.style.top=y+"px";p.style.background=cols[i%cols.length];
+    const a=Math.PI*2*i/14,d=40+Math.random()*55;
+    p.style.setProperty("--dx",Math.cos(a)*d+"px");p.style.setProperty("--dy",Math.sin(a)*d+"px");
+    fx.appendChild(p);setTimeout(()=>p.remove(),950);
+  }
+}
+function fireworksScreen(){
+  const wrap=$("#gameWrap"),fx=$("#fxLayer");
+  const x=Math.random()*wrap.clientWidth,y=Math.random()*wrap.clientHeight*.6;
+  const cols=["#f7d854","#7cf7a8","#ff9ecb","#8fe6ff"];
+  for(let i=0;i<12;i++){
+    const p=document.createElement("span");p.className="fw-p";
+    p.style.left=x+"px";p.style.top=y+"px";p.style.background=cols[i%cols.length];
+    const a=Math.PI*2*i/12,d=50+Math.random()*60;
+    p.style.setProperty("--dx",Math.cos(a)*d+"px");p.style.setProperty("--dy",Math.sin(a)*d+"px");
+    fx.appendChild(p);setTimeout(()=>p.remove(),950);
+  }
+}
+
+/* ================= UPDATE ================= */
+function update(dt,t){
+  if(phase==="play"||phase==="quiz"){
+    tAcc+=dt;
+    while(tAcc>=1000){
+      tAcc-=1000;time--;updateTime();
+      if(time<=5&&time>0)SFX.tick();
+      if(time<=0){if(quizOpen)closeQuiz();gameOver("time");return;}
+    }
+  }
+  if(touchCd>0)touchCd-=dt;
+  // gerakan pemain
+  if(phase==="play"&&!quizOpen){
+    let dx=(keys.right||dpad.right?1:0)-(keys.left||dpad.left?1:0);
+    let dy=(keys.down||dpad.down?1:0)-(keys.up||dpad.up?1:0);
+    player.moving=!!(dx||dy);
+    if(player.moving){
+      if(Math.abs(dx)>=Math.abs(dy))player.dir=dx>0?"right":"left";else player.dir=dy>0?"down":"up";
+      const l=Math.hypot(dx,dy),sp=115*dt/1000;
+      player.x=Math.max(28,Math.min(W-28,player.x+dx/l*sp*1000/1000*1000/1000*1000/1));
+      // (sp sudah per detik)
+      player.x=Math.max(28,Math.min(W-28,player.x)); // guard
+      player.x+= 0; // noop
+      player.y=Math.max(58,Math.min(H-24,player.y+dy/l*sp));
+      player.x=Math.max(28,Math.min(W-28,player.x+dx/l*sp));
+      player.walkT+=dt;player.stepT+=dt;
+      if(player.stepT>300){player.stepT=0;SFX.step();}
+    }
+    for(const ch of chests){
+      if(!ch.opened&&Math.hypot(ch.x-player.x,ch.y-player.y-6)<20){openQuiz(ch);break;}
+    }
+  }
+  particles=particles.filter(p=>{
+    p.life-=dt;p.x+=p.vx*dt/1000;p.y+=p.vy*dt/1000;p.vy+=140*dt/1000;return p.life>0;});
+  floats=floats.filter(f=>{f.life-=dt;f.y-=dt*.03;return f.life>0;});
+}
+
+/* ================= RENDER ================= */
+function drawBricks(x,y,w,h){
+  ctx.fillStyle="#2b2440";ctx.fillRect(x,y,w,h);
+  ctx.fillStyle="#221b36";
+  for(let r=0;r<h;r+=8){ctx.fillRect(x,y+r,w,1);
+    for(let c=((r/8)%2?8:0);c<w;c+=16)ctx.fillRect(x+c,y+r,1,8);}
+  ctx.fillStyle="#3d3560";ctx.fillRect(x,y+h-2,w,2);
+}
+function drawChest(ch,t){
+  const x=Math.round(ch.x),y=Math.round(ch.y);
+  if(!ch.opened){
+    const g=ctx.createRadialGradient(x,y,2,x,y,26);
+    g.addColorStop(0,`rgba(247,216,84,${.12+.08*Math.sin(t/300+ch.idx)})`);g.addColorStop(1,"rgba(247,216,84,0)");
+    ctx.fillStyle=g;ctx.fillRect(x-26,y-26,52,52);
+    // tanda seru
+    ctx.fillStyle="#f7d854";
+    const by=y-24+Math.sin(t/250+ch.idx)*2;
+    ctx.fillRect(x-1,by,3,7);ctx.fillRect(x-1,by+9,3,3);
+  }
+  ctx.fillStyle="#241608";ctx.fillRect(x-11,y-9,22,18);          // outline
+  ctx.fillStyle="#8a5a2b";ctx.fillRect(x-10,y-2,20,10);          // badan
+  ctx.fillStyle="#6b421d";ctx.fillRect(x-10,y+4,20,2);
+  if(ch.opened){
+    ctx.fillStyle="#3a230f";ctx.fillRect(x-9,y-4,18,5);          // dalam gelap
+    ctx.fillStyle="#ffd23f";ctx.fillRect(x-7,y-3,14,3);          // kilau emas
+    ctx.fillStyle="#a06a33";ctx.fillRect(x-10,y-14,20,6);        // tutup terbuka
+    ctx.fillStyle="#241608";ctx.fillRect(x-10,y-9,20,1);
+  }else{
+    ctx.fillStyle="#a06a33";ctx.fillRect(x-10,y-8,20,6);         // tutup
+    ctx.fillStyle="#f7d854";ctx.fillRect(x-2,y-8,4,12);          // pita emas
+    ctx.fillRect(x-3,y-2,6,5);                                   // kunci
+    ctx.fillStyle="#8a6a1a";ctx.fillRect(x-1,y,2,2);
+  }
+}
+function drawHero(t){
+  const x=Math.round(player.x),y=Math.round(player.y);
+  const frame=player.moving?Math.floor(player.walkT/160)%2:0;
+  ctx.fillStyle="rgba(0,0,0,.4)";ctx.fillRect(x-5,y+6,10,3);     // bayangan
+  // cahaya lentera
+  const g=ctx.createRadialGradient(x,y-6,4,x,y-6,52);
+  g.addColorStop(0,"rgba(255,190,90,.16)");g.addColorStop(1,"rgba(255,190,90,0)");
+  ctx.fillStyle=g;ctx.fillRect(x-52,y-58,104,104);
+  // kaki
+  ctx.fillStyle="#2c2f44";
+  ctx.fillRect(x-4,y+(frame?1:2),3,4);ctx.fillRect(x+1,y+(frame?2:1),3,4);
+  ctx.fillStyle="#6b4a2f";ctx.fillRect(x-4,y+4+(frame?1:2),3,2);ctx.fillRect(x+1,y+4+(frame?2:1),3,2);
+  // badan
+  ctx.fillStyle="#4c6ad8";ctx.fillRect(x-5,y-6,10,8);
+  ctx.fillStyle="#2c2f44";ctx.fillRect(x-5,y-1,10,2);
+  ctx.fillStyle="#f7d854";ctx.fillRect(x-1,y-1,2,2);
+  // lengan
+  ctx.fillStyle="#3b53b0";ctx.fillRect(x-7,y-5,2,5);ctx.fillRect(x+5,y-5,2,5);
+  // kepala + tudung merah
+  ctx.fillStyle="#e2574c";ctx.fillRect(x-5,y-15,10,5);ctx.fillRect(x-5,y-12,2,5);ctx.fillRect(x+3,y-12,2,5);
+  ctx.fillStyle="#ffcf9f";ctx.fillRect(x-3,y-11,6,5);
+  if(player.dir!=="up"){
+    ctx.fillStyle="#26313d";
+    const off=player.dir==="left"?-1:player.dir==="right"?1:0;
+    ctx.fillRect(x-2+off,y-10,1,2);ctx.fillRect(x+1+off,y-10,1,2);
+  }else{ctx.fillStyle="#c9463c";ctx.fillRect(x-3,y-11,6,5);}
+}
+function render(t){
+  ctx.imageSmoothingEnabled=false;
+  ctx.fillStyle="#171320";ctx.fillRect(0,0,W,H);
+  // lantai
+  for(let y=40;y<252;y+=16)for(let x=16;x<464;x+=16){
+    ctx.fillStyle=((x/16+y/16)%2===0)?"#1c1729":"#191523";ctx.fillRect(x,y,16,16);
+    if((x*7+y*13)%29===0){ctx.fillStyle="#241d33";ctx.fillRect(x+5,y+6,2,2);}
+  }
+  // dinding
+  drawBricks(0,0,W,40);drawBricks(0,40,16,212);drawBricks(464,40,16,212);
+  ctx.fillStyle="#100c18";ctx.fillRect(0,252,W,18);
+  ctx.fillStyle="#241d33";for(let x=8;x<W;x+=24)ctx.fillRect(x,254,8,3);
+  // obor
+  [[110,24],[370,24]].forEach(([tx,ty],i)=>{
+    const fl=Math.sin(t/90+i*3)*1.5;
+    const g=ctx.createRadialGradient(tx,ty,3,tx,ty,46);
+    g.addColorStop(0,`rgba(255,170,60,${.22+.06*Math.sin(t/110+i)})`);g.addColorStop(1,"rgba(255,170,60,0)");
+    ctx.fillStyle=g;ctx.fillRect(tx-46,ty-46,92,92);
+    ctx.fillStyle="#6b4a2f";ctx.fillRect(tx-1,ty+2,2,8);
+    ctx.fillStyle="#ff9f43";ctx.fillRect(tx-2,ty-3+fl*.4,4,5);
+    ctx.fillStyle="#ffd23f";ctx.fillRect(tx-1,ty-1+fl*.6,2,4);
+  });
+  chests.forEach(ch=>drawChest(ch,t));
+  if(phase!=="menu")drawHero(t);
+  particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.life/800);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.size,p.size);});
+  ctx.globalAlpha=1;
+  ctx.font="8px 'Press Start 2P'";ctx.textAlign="center";
+  floats.forEach(f=>{ctx.globalAlpha=Math.max(0,f.life/1000);ctx.fillStyle="#ffd23f";ctx.fillText(f.txt,f.x,f.y);});
+  ctx.globalAlpha=1;ctx.textAlign="left";
+}
+
+/* ================= LOOP ================= */
+let last=performance.now();
+function loop(t){
+  const dt=Math.min(40,t-last);last=t;
+  if(phase!=="menu"&&phase!=="over"&&phase!=="win")update(dt,t);
+  render(t);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ================= INPUT ================= */
+const KEYMAP={ArrowUp:"up",ArrowDown:"down",ArrowLeft:"left",ArrowRight:"right",w:"up",s:"down",a:"left",d:"right"};
+document.addEventListener("keydown",e=>{
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();
+  if(e.key==="Enter"){
+    if(!$("#startOv").classList.contains("hidden")){ac();startGame();return;}
+    if(!$("#endOv").classList.contains("hidden")){ac();startGame();return;}
+  }
+  if(quizOpen&&["1","2","3","4"].includes(e.key)){
+    const i=+e.key-1,b=$$("#optsBox button")[i];if(b)b.click();return;
+  }
+  const k=KEYMAP[e.key]||KEYMAP[e.key.toLowerCase()];if(k)keys[k]=1;
+});
+document.addEventListener("keyup",e=>{const k=KEYMAP[e.key]||KEYMAP[e.key.toLowerCase()];if(k)keys[k]=0;});
+$$(".dpad button").forEach(b=>{
+  const d=b.dataset.dir;
+  b.addEventListener("pointerdown",e=>{e.preventDefault();dpad[d]=1;});
+  ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>dpad[d]=0));
+});
+$("#startBtn").addEventListener("click",()=>{ac();startGame();});
+$("#againBtn").addEventListener("click",()=>{ac();startGame();});
+
+renderHearts();updateTime();
+</script>
+</body>
+</html>
